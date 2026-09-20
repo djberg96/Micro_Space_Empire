@@ -74,7 +74,13 @@ module MicroSpaceEmpire
       when "phase_one"
         state.subphase == "attack" ? "Resolve the mandatory attack before continuing." : "Explore a system, reconquer an unaligned world, or safely bide your time."
       when "collect"
-        state.subphase == "collect" ? "Collect production up to your storage limit." : "Make one optional Commerce trade, then continue."
+        if state.subphase == "collect"
+          "Collect production up to your storage limit."
+        elsif state.has_technology?("interspecies-commerce")
+          "Make one optional Commerce trade, then continue."
+        else
+          "Collection is complete. Continue to construction."
+        end
       when "build"
         "Build Military and research Technology in either order, at most once each."
       when "event"

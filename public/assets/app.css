@@ -168,8 +168,9 @@ input[type=text], input:not([type]) { width: 100%; color: var(--ink); background
 .mini-deck span { display: grid; }.mini-deck b { color: var(--ink); font-size: 1.15rem; }
 details summary { cursor: pointer; font-weight: 800; display: flex; justify-content: space-between; list-style: none; }
 .tech-list { display: grid; gap: .35rem; margin-top: .8rem; }
-.tech { display: flex; align-items: center; justify-content: space-between; padding: .55rem .65rem; border: 1px solid var(--line); border-radius: .45rem; color: var(--secondary); }
+.tech { display: flex; align-items: center; justify-content: space-between; padding: .55rem .65rem; border: 1px solid var(--line); border-radius: .45rem; color: var(--secondary); user-select: none; -webkit-user-select: none; }
 .tech span { display: grid; }.tech small { display: none; }.tech.owned { color: var(--ink); border-color: rgba(121,224,209,.45); background: rgba(121,224,209,.07); }.tech.owned b { color: var(--cyan); }
+.tech b, .research-grid b { flex: 0 0 auto; margin-left: .5rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .action-panel { position: sticky; top: 1rem; min-height: 360px; overflow: hidden; }
 .action-panel form { margin: .55rem 0; }
 .action-panel form > button { width: 100%; }
@@ -187,8 +188,12 @@ details summary { cursor: pointer; font-weight: 800; display: flex; justify-cont
 .current-card { width: min(280px, 65vw); animation: card-reveal .55s ease both; }
 .empire-section { margin-top: 3rem; }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1.2rem; align-items: start; }
-.system-card { margin: 0; transition: transform .2s ease, filter .2s ease; }
-.system-card.unaligned { transform: rotate(4deg); filter: saturate(.45) brightness(.72); }
+.system-card { min-width: 0; margin: 0; }
+.system-card .card-frame { width: 100%; }
+.system-card.unaligned { grid-column: span 2; }
+.system-card.unaligned .card-frame { width: 70%; aspect-ratio: 7 / 5; display: grid; place-items: center; }
+.system-card.unaligned .card { width: 71.4286%; transform: rotate(90deg); filter: saturate(.55) brightness(.8); }
+.system-card.unaligned figcaption { width: 70%; }
 .system-card figcaption { display: grid; padding: .7rem .2rem; font-size: .82rem; }.system-card figcaption span { font-weight: 800; }.system-card figcaption em { color: var(--muted); font-style: normal; text-transform: capitalize; }
 .log-panel { margin-top: 3rem; padding: 1rem 1.2rem; }.log-panel ol { color: var(--secondary); line-height: 1.55; max-height: 18rem; overflow: auto; }.log-panel li { padding: .2rem 0; }
 .rules-copy { max-width: 760px; margin: 5vh auto; font-size: 1.06rem; line-height: 1.7; }.rules-copy h1 { margin-bottom: 2.5rem; }.rules-copy h2 { margin-top: 2.2rem; color: var(--gold); }.rules-copy li { padding: .35rem 0; }

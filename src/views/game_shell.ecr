@@ -54,7 +54,7 @@
           <% technologies.each do |tech| %>
             <% owned = state.has_technology?(tech.id) %>
             <div class="tech <%= owned ? "owned" : "" %>" title="<%= h(tech.name) %>: <%= h(tech.description) %>">
-              <span><%= h(tech.name) %><small><%= h(tech.description) %></small></span><b><%= owned ? "✓" : "#{tech.cost} W" %></b>
+              <span><%= h(tech.name) %><small><%= h(tech.description) %></small></span><b><%= owned ? "✓" : "#{tech.cost}W" %></b>
             </div>
           <% end %>
         </div>
@@ -121,8 +121,13 @@
           <input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="collect_resources"><button class="primary">Collect resources</button>
         </form>
       <% elsif state.phase == "collect" %>
-        <h2>Commerce window</h2>
-        <p>Make one optional trade, or continue to construction.</p>
+        <% if state.has_technology?("interspecies-commerce") %>
+          <h2>Commerce window</h2>
+          <p>Make one optional trade, or continue to construction.</p>
+        <% else %>
+          <h2>Collection complete</h2>
+          <p>Research Interspecies Commerce to trade resources during this phase.</p>
+        <% end %>
         <% if state.has_technology?("interspecies-commerce") && !state.collection_trade_used %>
           <div class="button-row">
             <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="trade_metal_for_wealth"><button <%= state.metal >= 2 && state.wealth < @engine.storage_cap(state) ? "" : "disabled" %>>2 Metal → 1 Wealth</button></form>
@@ -136,7 +141,7 @@
         <div class="research-grid">
           <% technologies.each do |tech| %>
             <% next if state.has_technology?(tech.id) %>
-            <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="research"><input type="hidden" name="target" value="<%= h(tech.id) %>"><button title="<%= h(research_hint(state, tech)) %>" <%= @engine.can_research?(state, tech) ? "" : "disabled" %>><span><%= h(tech.name) %></span><b><%= tech.cost %> W</b></button></form>
+            <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="research"><input type="hidden" name="target" value="<%= h(tech.id) %>"><button title="<%= h(research_hint(state, tech)) %>" <%= @engine.can_research?(state, tech) ? "" : "disabled" %>><span><%= h(tech.name) %></span><b><%= tech.cost %>W</b></button></form>
           <% end %>
         </div>
         <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="finish_build"><button class="primary">Continue to event</button></form>
@@ -175,7 +180,7 @@
       <% state.systems.reject { |system| system.status == "discarded" || system.status == "pending" }.each do |system| %>
         <% card = system_card(system.id) %>
         <figure class="system-card <%= h(system.status) %>">
-          <img class="card" src="<%= card.front_path %>" alt="<%= h(card.name) %>">
+          <div class="card-frame"><img class="card" src="<%= card.front_path %>" alt="<%= h(card.name) %>"></div>
           <figcaption><span><%= h(card.name) %></span><em><%= h(system.status) %><% if system.production_disabled_collections > 0 %> · storms ×<%= system.production_disabled_collections %><% end %></em></figcaption>
         </figure>
       <% end %>

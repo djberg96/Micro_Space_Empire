@@ -38,10 +38,12 @@
       form.dataset.bound = "true";
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
+        const actionUrl = form.getAttribute("action");
+        if (!actionUrl) return;
         const button = form.querySelector("button[type=submit], button:not([type])");
         if (button) button.disabled = true;
         try {
-          const response = await fetch(form.action, {
+          const response = await fetch(actionUrl, {
             method: "POST",
             body: new FormData(form),
             headers: {"X-Requested-With": "fetch", "Accept": "application/json"},
