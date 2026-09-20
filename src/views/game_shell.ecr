@@ -91,7 +91,6 @@
     </aside>
 
     <section class="action-panel panel">
-      <p class="eyebrow">Current decision</p>
       <% if !state.active? %>
         <% score = state.score.not_nil! %>
         <div class="final-score"><strong><%= score.total %></strong><span>Victory Points</span></div>
@@ -202,7 +201,17 @@
   <% end %>
 
   <section class="empire-section">
-    <div class="section-heading"><div><p class="eyebrow">Star chart</p><h2>Your empire</h2></div><span><%= state.controlled_systems.size %> controlled · <%= state.unaligned_systems.size %> unaligned</span></div>
+    <div class="section-heading">
+      <div><p class="eyebrow">Star chart</p><h2>Your empire</h2></div>
+      <div class="empire-heading-actions">
+        <span class="empire-count"><%= state.controlled_systems.size %> controlled · <%= state.unaligned_systems.size %> unaligned</span>
+        <div class="zoom-control" role="group" aria-label="Empire card zoom">
+          <button type="button" data-empire-zoom="out" aria-label="Zoom cards out" title="Zoom cards out">−</button>
+          <button type="button" class="zoom-value" data-empire-zoom="reset" aria-label="Reset card zoom" title="Reset card zoom"><span data-empire-zoom-value>100%</span></button>
+          <button type="button" data-empire-zoom="in" aria-label="Zoom cards in" title="Zoom cards in">+</button>
+        </div>
+      </div>
+    </div>
     <div class="card-grid">
       <% state.systems.reject { |system| system.status == "discarded" || system.status == "pending" }.each do |system| %>
         <% card = system_card(system.id) %>

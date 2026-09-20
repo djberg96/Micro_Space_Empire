@@ -135,6 +135,48 @@
     });
   };
 
+  const bindEmpireZoom = () => {
+    const shell = document.querySelector("#game-shell");
+    const grid = shell?.querySelector(".empire-section .card-grid");
+    if (!shell || !grid) return;
+    const levels = [60, 80, 100, 125, 150, 175, 200];
+    let zoom = 100;
+    try {
+      const saved = Number.parseInt(localStorage.getItem("mse-empire-zoom"), 10);
+      if (levels.includes(saved)) zoom = saved;
+    } catch (_error) {}
+
+    const applyZoom = (requested, persist = false) => {
+      zoom = levels.includes(requested) ? requested : 100;
+      const largeBoard = window.matchMedia("(min-width: 1800px) and (min-height: 1000px)").matches;
+      const fullBoard = window.matchMedia("(min-width: 1100px) and (min-height: 750px)").matches;
+      const baseSize = largeBoard ? 190 : (fullBoard ? 150 : 160);
+      grid.style.setProperty("--empire-card-size", `${Math.round(baseSize * zoom / 100)}px`);
+      shell.querySelectorAll("[data-empire-zoom-value]").forEach((output) => { output.textContent = `${zoom}%`; });
+      const index = levels.indexOf(zoom);
+      const out = shell.querySelector("[data-empire-zoom=out]");
+      const into = shell.querySelector("[data-empire-zoom=in]");
+      if (out) out.disabled = index === 0;
+      if (into) into.disabled = index === levels.length - 1;
+      if (persist) {
+        try { localStorage.setItem("mse-empire-zoom", zoom); } catch (_error) {}
+      }
+    };
+
+    applyZoom(zoom);
+    shell.querySelectorAll("[data-empire-zoom]").forEach((button) => {
+      if (button.dataset.bound) return;
+      button.dataset.bound = "true";
+      button.addEventListener("click", () => {
+        const action = button.dataset.empireZoom;
+        const index = levels.indexOf(zoom);
+        if (action === "out" && index > 0) applyZoom(levels[index - 1], true);
+        if (action === "in" && index < levels.length - 1) applyZoom(levels[index + 1], true);
+        if (action === "reset") applyZoom(100, true);
+      });
+    });
+  };
+
   const confirmationForms = () => {
     document.querySelectorAll("form").forEach((form) => {
       if (form.dataset.confirmBound) return;
@@ -150,6 +192,7 @@
     bindThemePickers();
     animateDice();
     bindPanelResizers();
+    bindEmpireZoom();
     confirmationForms();
     document.querySelectorAll("form.async-action").forEach((form) => {
       if (form.dataset.bound) return;
@@ -174,6 +217,11 @@
             bindActions();
             const next = document.querySelector("#game-shell");
             next.classList.add("state-enter");
+            const transition = next.querySelector(".transition-message");
+            if (transition) {
+              transition.classList.add("is-new");
+              window.setTimeout(() => transition.classList.remove("is-new"), 1100);
+            }
             window.setTimeout(() => next.classList.remove("state-enter"), 500);
           }
         } catch (_error) {
@@ -186,10 +234,14 @@
   document.addEventListener("DOMContentLoaded", bindActions);
   window.addEventListener("resize", () => {
     window.clearTimeout(panelResizeTimer);
-    panelResizeTimer = window.setTimeout(bindPanelResizers, 100);
+    panelResizeTimer = window.setTimeout(() => {
+      bindPanelResizers();
+      bindEmpireZoom();
+    }, 100);
   });
   window.addEventListener("storage", (event) => {
     if (event.key === "mse-theme" && event.newValue) applyTheme(event.newValue);
     if (event.key === "mse-dashboard-width" || event.key === "mse-action-width") bindPanelResizers();
+    if (event.key === "mse-empire-zoom") bindEmpireZoom();
   });
 })();
