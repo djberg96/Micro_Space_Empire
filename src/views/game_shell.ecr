@@ -31,9 +31,16 @@
     <div><p class="eyebrow">Year <%= state.year %> · Turn <%= state.turn %></p><h1><%= h(phase_title(state)) %></h1></div>
     <p><%= h(phase_help(state)) %></p>
   </header>
-  <div class="transition-message" role="status"><%= h(state.last_transition) %></div>
+  <div class="transition-message <%= state.last_roll ? "roll-transition" : "" %>" role="status">
+    <% if roll = state.last_roll %>
+      <span class="animated-die" data-die-result="<%= roll %>" role="img" aria-label="Rolled <%= roll %>"><span aria-hidden="true">&#<%= 9855 + roll %>;</span></span>
+    <% end %>
+    <span class="transition-copy"><%= h(state.last_transition) %></span>
+  </div>
 
   <section class="command-grid">
+    <div class="panel-resizer dashboard-resizer" data-panel-resizer="dashboard" role="separator" aria-orientation="vertical" aria-label="Resize dashboard panel" aria-valuemin="220" aria-valuemax="520" aria-valuenow="270" tabindex="0" title="Drag to resize · Double-click to reset"></div>
+    <div class="panel-resizer action-resizer" data-panel-resizer="action" role="separator" aria-orientation="vertical" aria-label="Resize decision panel" aria-valuemin="280" aria-valuemax="600" aria-valuenow="350" tabindex="0" title="Drag to resize · Double-click to reset"></div>
     <aside class="dashboard panel">
       <% metal_prod, wealth_prod = @engine.production(state) %>
       <div class="resource-grid">
@@ -134,7 +141,7 @@
             <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="trade_wealth_for_metal"><button <%= state.wealth >= 2 && state.metal < @engine.storage_cap(state) ? "" : "disabled" %>>2 Wealth → 1 Metal</button></form>
           </div>
         <% end %>
-        <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="finish_collection"><button class="primary">Continue to build</button></form>
+        <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="finish_collection"><button class="primary">Continue to build phase</button></form>
       <% elsif state.phase == "build" %>
         <h2>Build your empire</h2>
         <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="build_military"><button title="<%= h(military_hint(state)) %>" <%= !state.built_military && state.metal >= 1 && state.wealth >= 1 && state.military < @engine.military_cap(state) ? "" : "disabled" %>>Build Military · 1 M + 1 W</button></form>
@@ -144,7 +151,7 @@
             <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="research"><input type="hidden" name="target" value="<%= h(tech.id) %>"><button title="<%= h(research_hint(state, tech)) %>" <%= @engine.can_research?(state, tech) ? "" : "disabled" %>><span><%= h(tech.name) %></span><b><%= tech.cost %>W</b></button></form>
           <% end %>
         </div>
-        <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="finish_build"><button class="primary">Continue to event</button></form>
+        <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="finish_build"><button class="primary">Continue to event phase</button></form>
       <% elsif state.phase == "event" && state.subphase == "reveal" %>
         <h2>Unknown signals</h2><p>Reveal the next event card. Its effect is autosaved immediately.</p>
         <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="reveal_event"><button class="primary">Reveal event</button></form>
@@ -160,11 +167,9 @@
           <% end %>
         </div>
       <% elsif state.phase == "event" %>
-        <h2>Event resolved</h2><p><%= h(state.last_transition) %></p>
-        <% if roll = state.last_roll %><div class="die-result" aria-label="Die result <%= roll %>"><%= roll %></div><% end %>
+        <h2>Event resolved</h2><p>Review the result above, then continue.</p>
         <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="finish_event"><button class="primary">Continue</button></form>
       <% end %>
-      <% if roll = state.last_roll %><div class="die-result floating" aria-label="Last die result <%= roll %>"><%= roll %></div><% end %>
     </section>
   </section>
 

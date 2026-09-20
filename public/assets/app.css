@@ -151,7 +151,14 @@ input[type=text], input:not([type]) { width: 100%; color: var(--ink); background
 .turn-header { display: grid; grid-template-columns: 1fr minmax(250px, .7fr); gap: 2rem; align-items: end; margin-bottom: 1.4rem; }
 .turn-header h1 { font-size: clamp(2.2rem, 5vw, 4.2rem); margin-bottom: 0; }
 .turn-header > p { color: var(--secondary); line-height: 1.55; margin-bottom: .3rem; }
-.transition-message { margin: -.3rem 0 1.2rem; padding: .7rem .9rem; color: var(--transition-ink); background: var(--soft-surface); border-left: 2px solid var(--cyan); border-radius: 0 .4rem .4rem 0; }
+.transition-message { margin: -.3rem 0 1.2rem; padding: .7rem .9rem; color: var(--transition-ink); background: var(--soft-surface); border-left: 2px solid var(--cyan); border-radius: 0 .4rem .4rem 0; display: flex; align-items: center; gap: .75rem; }
+.transition-copy { min-width: 0; }
+.animated-die { flex: 0 0 auto; width: 2.7rem; height: 2.7rem; display: grid; place-items: center; color: #182127; background: #eee7d5; border: 1px solid #a89770; border-radius: .48rem; box-shadow: inset 0 0 0 2px #c9bb98, 0 6px 14px #0005; font: 400 2.35rem/1 "Apple Symbols", "Segoe UI Symbol", sans-serif; user-select: none; -webkit-user-select: none; }
+.animated-die > span { display: block; transform: translateY(-.02em); }
+.animated-die.is-rolling { animation: die-tumble .7s cubic-bezier(.3, .7, .25, 1) both; }
+.animated-die.is-settled { animation: die-land .18s ease-out both; }
+.roll-transition .transition-copy { animation: roll-copy-in .2s .5s ease-out both; }
+.panel-resizer { display: none; }
 .command-grid { display: grid; grid-template-columns: minmax(330px, .9fr) minmax(360px, 1.1fr); gap: 1.1rem; align-items: start; }
 .dashboard, .action-panel { padding: 1.25rem; }
 .resource-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; }
@@ -179,8 +186,6 @@ details summary { cursor: pointer; font-weight: 800; display: flex; justify-cont
 .research-grid { margin: 1rem 0; }
 .research-grid button { justify-content: space-between; text-align: left; min-height: 3.3rem; }
 .warning { border-left: 3px solid var(--gold); padding: .5rem .8rem; background: rgba(233,184,95,.08); }
-.die-result { width: 4rem; height: 4rem; border-radius: .7rem; display: grid; place-items: center; background: #e8e0c9; color: #101317; font: 900 2rem Georgia, serif; box-shadow: inset 0 0 0 4px #b9aa84, 0 12px 30px #0008; margin: 1rem auto; }
-.die-result.floating { position: absolute; right: 1rem; bottom: 1rem; opacity: .25; }
 .final-score { display: grid; justify-items: center; margin: 1.2rem; }.final-score strong { font: 700 5rem Georgia, serif; color: var(--gold); }.final-score span { color: var(--muted); }
 .score-lines div { display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding: .45rem 0; }.score-lines dd { font-weight: 800; }
 .reveal-strip { display: grid; justify-items: center; padding: 2.5rem 0 1rem; perspective: 1000px; }
@@ -201,6 +206,15 @@ details summary { cursor: pointer; font-weight: 800; display: flex; justify-cont
 
 @keyframes card-reveal { from { transform: rotateY(90deg) translateY(15px); opacity: 0; } to { transform: rotateY(0); opacity: 1; } }
 @keyframes state-enter { from { opacity: .72; } to { opacity: 1; } }
+@keyframes die-tumble {
+  0% { transform: translateY(-.35rem) rotate(-18deg) scale(.88); }
+  28% { transform: translateY(.12rem) rotate(102deg) scale(1.04); }
+  56% { transform: translateY(-.16rem) rotate(215deg) scale(.96); }
+  82% { transform: translateY(.05rem) rotate(322deg) scale(1.02); }
+  100% { transform: translateY(0) rotate(360deg) scale(1); }
+}
+@keyframes die-land { from { transform: scale(1.12); } to { transform: scale(1); } }
+@keyframes roll-copy-in { from { opacity: 0; transform: translateX(.35rem); } to { opacity: 1; transform: translateX(0); } }
 
 @media (max-width: 800px) {
   .new-game, .quick-start, .quick-start-form, .turn-header, .command-grid { grid-template-columns: 1fr; }
@@ -222,15 +236,18 @@ details summary { cursor: pointer; font-weight: 800; display: flex; justify-cont
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  .roll-transition .transition-copy { animation: none !important; }
 }
 
 /* Full-board layout for desktop play: keep the complete game state in one viewport. */
 @media (min-width: 1100px) and (min-height: 750px) {
   body:has(.game-shell) { overflow: hidden; }
+  body.resizing-panels { cursor: col-resize; user-select: none; -webkit-user-select: none; }
   .game-shell {
+    --dashboard-width: 270px; --action-width: 350px;
     width: 100%; max-width: none; height: 100dvh; margin: 0; padding: .55rem .75rem;
-    display: grid; grid-template-columns: 270px minmax(0, 1fr) 350px;
-    grid-template-rows: 46px 48px 32px minmax(0, 1fr); gap: .45rem .65rem;
+    display: grid; grid-template-columns: var(--dashboard-width) 12px minmax(0, 1fr) 12px var(--action-width);
+    grid-template-rows: 46px 48px 42px minmax(0, 1fr); gap: .45rem .25rem;
     overflow: hidden;
   }
   .game-shell .game-nav {
@@ -252,7 +269,24 @@ details summary { cursor: pointer; font-weight: 800; display: flex; justify-cont
     grid-column: 1 / -1; grid-row: 3; margin: 0; padding: .35rem .65rem;
     display: flex; align-items: center; font-size: .76rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  .game-shell .animated-die { width: 2rem; height: 2rem; border-radius: .36rem; font-size: 1.78rem; box-shadow: inset 0 0 0 1px #c9bb98, 0 3px 8px #0004; }
+  .game-shell .transition-copy { overflow: hidden; text-overflow: ellipsis; }
   .game-shell .command-grid { display: contents; }
+  .game-shell .panel-resizer {
+    display: flex; grid-row: 4; align-items: center; justify-content: center; min-width: 0;
+    cursor: col-resize; touch-action: none; outline: none;
+  }
+  .game-shell .dashboard-resizer { grid-column: 2; }
+  .game-shell .action-resizer { grid-column: 4; }
+  .game-shell .panel-resizer::before {
+    content: ""; width: 2px; height: 3.5rem; border-radius: 2px; background: var(--line);
+    transition: height .15s ease, width .15s ease, background .15s ease, box-shadow .15s ease;
+  }
+  .game-shell .panel-resizer:hover::before,
+  .game-shell .panel-resizer:focus-visible::before,
+  .game-shell .panel-resizer.is-resizing::before {
+    width: 3px; height: 5rem; background: var(--cyan); box-shadow: 0 0 12px color-mix(in srgb, var(--cyan) 55%, transparent);
+  }
   .game-shell .dashboard {
     grid-column: 1; grid-row: 4; min-width: 0; padding: .7rem; overflow: hidden;
   }
@@ -272,7 +306,7 @@ details summary { cursor: pointer; font-weight: 800; display: flex; justify-cont
   .game-shell .tech span { min-width: 0; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .game-shell .tech b { flex: 0 0 auto; margin-left: .35rem; }
   .game-shell .action-panel {
-    grid-column: 3; grid-row: 4; position: static; min-height: 0; padding: .8rem;
+    grid-column: 5; grid-row: 4; position: static; min-height: 0; padding: .8rem;
     overflow: auto; scrollbar-width: thin;
   }
   .game-shell .action-panel .eyebrow { margin-bottom: .32rem; font-size: .63rem; }
@@ -285,13 +319,12 @@ details summary { cursor: pointer; font-weight: 800; display: flex; justify-cont
   .game-shell .research-grid { margin: .5rem 0; }
   .game-shell .research-grid button { min-height: 2.35rem; }
   .game-shell .warning { padding: .35rem .55rem; }
-  .game-shell .die-result { width: 3.2rem; height: 3.2rem; margin: .6rem auto; font-size: 1.55rem; }
   .game-shell .final-score { margin: .6rem; }
   .game-shell .final-score strong { font-size: 3.4rem; }
   .game-shell .score-lines { margin: 0; font-size: .76rem; }
   .game-shell .score-lines div { padding: .3rem 0; }
   .game-shell .empire-section {
-    grid-column: 2; grid-row: 4; min-width: 0; min-height: 0; margin: 0; padding: .7rem;
+    grid-column: 3; grid-row: 4; min-width: 0; min-height: 0; margin: 0; padding: .7rem;
     overflow: hidden; background: var(--board-bg); border: 1px solid var(--line); border-radius: .8rem;
   }
   .game-shell .empire-section .section-heading { align-items: center; margin: 0 0 .5rem; }
@@ -305,7 +338,7 @@ details summary { cursor: pointer; font-weight: 800; display: flex; justify-cont
   .game-shell .system-card figcaption { padding: .3rem .1rem 0; font-size: .64rem; line-height: 1.2; }
   .game-shell .system-card figcaption em { font-size: .58rem; }
   .game-shell .reveal-strip {
-    grid-column: 2; grid-row: 4; z-index: 4; align-self: start; justify-self: end;
+    grid-column: 3; grid-row: 4; z-index: 4; align-self: start; justify-self: end;
     width: 160px; margin: 2.45rem .75rem 0 0; padding: .45rem; border-radius: .65rem;
     background: var(--popover); border: 1px solid var(--gold); box-shadow: 0 16px 40px #0008;
   }
@@ -317,8 +350,8 @@ details summary { cursor: pointer; font-weight: 800; display: flex; justify-cont
 
 @media (min-width: 1800px) and (min-height: 1000px) {
   .game-shell {
-    grid-template-columns: 350px minmax(0, 1fr) 440px;
-    grid-template-rows: 56px 58px 38px minmax(0, 1fr); gap: .55rem .8rem;
+    --dashboard-width: 350px; --action-width: 440px;
+    grid-template-rows: 56px 58px 50px minmax(0, 1fr); gap: .55rem .8rem;
     padding: .7rem .9rem;
   }
   .game-shell .brand { width: 2.6rem; height: 2.6rem; font-size: .9rem; }
