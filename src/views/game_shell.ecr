@@ -6,6 +6,11 @@
       <details class="game-menu">
         <summary class="button ghost">Menu</summary>
         <div class="game-menu-popover">
+          <label class="theme-picker menu-theme">Theme
+            <select data-theme-select aria-label="Color theme">
+              <option value="starfield">Starfield</option><option value="nebula">Nebula</option><option value="tactical">Tactical Blue</option><option value="command">Command Deck</option>
+            </select>
+          </label>
           <a href="/rules">Rules reference</a>
           <% if record.saved %>
             <a href="/">Main Menu</a>

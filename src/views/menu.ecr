@@ -5,7 +5,14 @@
       <h1>Micro Space Empire</h1>
       <p>Explore, build, and survive two volatile years.</p>
     </div>
-    <a class="button ghost" href="/rules">Rules</a>
+    <div class="header-controls">
+      <label class="theme-picker">Theme
+        <select data-theme-select aria-label="Color theme">
+          <option value="starfield">Starfield</option><option value="nebula">Nebula</option><option value="tactical">Tactical Blue</option><option value="command">Command Deck</option>
+        </select>
+      </label>
+      <a class="button ghost" href="/rules">Rules</a>
+    </div>
   </header>
 
   <% if error %><div class="notice error" role="alert"><%= h(error) %></div><% end %>

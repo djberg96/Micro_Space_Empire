@@ -87,12 +87,13 @@ module MicroSpaceEmpire
     def page(title : String, body : String) : String
       <<-HTML
         <!doctype html>
-        <html lang="en">
+        <html lang="en" data-theme="starfield">
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1">
-            <meta name="color-scheme" content="dark">
+            <meta name="color-scheme" content="dark light">
             <title>#{h(title)} · Micro Space Empire</title>
+            <script>try{const a=["starfield","nebula","tactical","command"],q=new URLSearchParams(location.search).get("theme"),t=a.includes(q)?q:localStorage.getItem("mse-theme");if(a.includes(t)){document.documentElement.dataset.theme=t;if(q)localStorage.setItem("mse-theme",t)}}catch(e){}</script>
             <link rel="stylesheet" href="/assets/app.css">
             <script src="/assets/app.js" defer></script>
           </head>

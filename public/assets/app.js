@@ -1,4 +1,25 @@
 (() => {
+  const themes = new Set(["starfield", "nebula", "tactical", "command"]);
+
+  const applyTheme = (theme) => {
+    const selected = themes.has(theme) ? theme : "starfield";
+    document.documentElement.dataset.theme = selected;
+    document.querySelectorAll("[data-theme-select]").forEach((picker) => {
+      picker.value = selected;
+    });
+    try { localStorage.setItem("mse-theme", selected); } catch (_error) {}
+  };
+
+  const bindThemePickers = () => {
+    const current = document.documentElement.dataset.theme || "starfield";
+    document.querySelectorAll("[data-theme-select]").forEach((picker) => {
+      picker.value = current;
+      if (picker.dataset.bound) return;
+      picker.dataset.bound = "true";
+      picker.addEventListener("change", () => applyTheme(picker.value));
+    });
+  };
+
   const confirmationForms = () => {
     document.querySelectorAll("form[data-confirm]").forEach((form) => {
       if (form.dataset.bound) return;
@@ -10,6 +31,7 @@
   };
 
   const bindActions = () => {
+    bindThemePickers();
     confirmationForms();
     document.querySelectorAll("form.async-action").forEach((form) => {
       if (form.dataset.bound) return;
@@ -42,4 +64,7 @@
   };
 
   document.addEventListener("DOMContentLoaded", bindActions);
+  window.addEventListener("storage", (event) => {
+    if (event.key === "mse-theme" && event.newValue) applyTheme(event.newValue);
+  });
 })();

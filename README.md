@@ -14,6 +14,8 @@ make dev
 
 Open <http://127.0.0.1:3000>. New games begin unnamed; choose **Menu → Save Game** when you want to keep one. Named games are written to `var/micro_space_empire.db` and every subsequent action is autosaved. Set `MSE_DATABASE_PATH`, `MSE_HOST`, or `MSE_PORT` to override the local defaults.
 
+Use the theme picker on the main menu or in the in-game menu to choose Starfield, Nebula, Tactical Blue, or the light Command Deck theme. The choice is kept in the browser and applies to every screen.
+
 For an optimized binary:
 
 ```sh
