@@ -12,7 +12,7 @@ make test
 make dev
 ```
 
-Open <http://127.0.0.1:3000>. Saves are written to `var/micro_space_empire.db` and every completed action is autosaved. Set `MSE_DATABASE_PATH`, `MSE_HOST`, or `MSE_PORT` to override the local defaults.
+Open <http://127.0.0.1:3000>. New games begin unnamed; choose **Menu → Save Game** when you want to keep one. Named games are written to `var/micro_space_empire.db` and every subsequent action is autosaved. Set `MSE_DATABASE_PATH`, `MSE_HOST`, or `MSE_PORT` to override the local defaults.
 
 For an optimized binary:
 

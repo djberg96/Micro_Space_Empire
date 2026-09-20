@@ -121,12 +121,13 @@ module MicroSpaceEmpire
   class SaveRecord
     getter id : Int64
     getter name : String
+    getter saved : Bool
     getter state : GameState
     getter version : Int32
     getter created_at : String
     getter updated_at : String
 
-    def initialize(@id, @name, @state, @version, @created_at, @updated_at)
+    def initialize(@id, @name, @saved, @state, @version, @created_at, @updated_at)
     end
   end
 

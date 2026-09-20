@@ -20,6 +20,7 @@ module MicroSpaceEmpire
 
     def initialize(@db)
       migrate!
+      db.exec "DELETE FROM games WHERE saved = 0"
     end
 
     def close : Nil
@@ -36,27 +37,37 @@ module MicroSpaceEmpire
           applied_at TEXT NOT NULL
         )
       SQL
-      applied = db.query_one?("SELECT version FROM schema_migrations WHERE version = 1", as: Int32)
-      return if applied
-
-      db.transaction do |tx|
-        tx.connection.exec <<-SQL
-          CREATE TABLE games (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL COLLATE NOCASE UNIQUE,
-            ruleset TEXT NOT NULL,
-            status TEXT NOT NULL,
-            state_json TEXT NOT NULL,
-            lock_version INTEGER NOT NULL DEFAULT 0,
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
+      unless db.query_one?("SELECT version FROM schema_migrations WHERE version = 1", as: Int32)
+        db.transaction do |tx|
+          tx.connection.exec <<-SQL
+            CREATE TABLE games (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+              ruleset TEXT NOT NULL,
+              status TEXT NOT NULL,
+              state_json TEXT NOT NULL,
+              lock_version INTEGER NOT NULL DEFAULT 0,
+              created_at TEXT NOT NULL,
+              updated_at TEXT NOT NULL
+            )
+          SQL
+          tx.connection.exec(
+            "INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
+            1,
+            timestamp
           )
-        SQL
-        tx.connection.exec(
-          "INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
-          1,
-          timestamp
-        )
+        end
+      end
+
+      unless db.query_one?("SELECT version FROM schema_migrations WHERE version = 2", as: Int32)
+        db.transaction do |tx|
+          tx.connection.exec "ALTER TABLE games ADD COLUMN saved INTEGER NOT NULL DEFAULT 1"
+          tx.connection.exec(
+            "INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
+            2,
+            timestamp
+          )
+        end
       end
     end
 
@@ -78,20 +89,36 @@ module MicroSpaceEmpire
       get(result.last_insert_id)
     end
 
+    def create_unsaved(state : GameState) : SaveRecord
+      db.exec "DELETE FROM games WHERE saved = 0"
+      now = timestamp
+      internal_name = "__unsaved__#{Time.utc.to_unix_ms}_#{Random.rand(100_000)}"
+      result = db.exec(
+        "INSERT INTO games(name, ruleset, status, state_json, lock_version, created_at, updated_at, saved) VALUES (?, ?, ?, ?, 0, ?, ?, 0)",
+        internal_name,
+        state.content_version,
+        state.status,
+        state.to_json,
+        now,
+        now
+      )
+      get(result.last_insert_id)
+    end
+
     def get(id : Int64) : SaveRecord
       record = db.query_one?(
-        "SELECT name, state_json, lock_version, created_at, updated_at FROM games WHERE id = ?",
+        "SELECT name, saved, state_json, lock_version, created_at, updated_at FROM games WHERE id = ?",
         id,
-        as: {String, String, Int32, String, String}
+        as: {String, Int32, String, Int32, String, String}
       )
       raise StoreError.new("Save not found.") unless record
-      name, json, version, created_at, updated_at = record
-      SaveRecord.new(id, name, GameState.from_json(json), version, created_at, updated_at)
+      name, saved, json, version, created_at, updated_at = record
+      SaveRecord.new(id, name, saved == 1, GameState.from_json(json), version, created_at, updated_at)
     end
 
     def list : Array(SaveSummary)
       saves = [] of SaveSummary
-      db.query("SELECT id, name, state_json, updated_at FROM games ORDER BY updated_at DESC, id DESC") do |rows|
+      db.query("SELECT id, name, state_json, updated_at FROM games WHERE saved = 1 ORDER BY updated_at DESC, id DESC") do |rows|
         rows.each do
           id = rows.read(Int64)
           name = rows.read(String)
@@ -128,6 +155,16 @@ module MicroSpaceEmpire
     def rename(id : Int64, name : String) : Nil
       result = db.exec("UPDATE games SET name = ?, updated_at = ? WHERE id = ?", validate_name(name), timestamp, id)
       raise StoreError.new("Save not found.") unless result.rows_affected == 1
+    end
+
+    def save(id : Int64, name : String) : SaveRecord
+      clean_name = validate_name(name)
+      if db.query_one?("SELECT 1 FROM games WHERE name = ? COLLATE NOCASE AND id != ?", clean_name, id, as: Int32)
+        raise StoreError.new("A save with that name already exists.")
+      end
+      result = db.exec("UPDATE games SET name = ?, saved = 1, updated_at = ? WHERE id = ?", clean_name, timestamp, id)
+      raise StoreError.new("Game not found.") unless result.rows_affected == 1
+      get(id)
     end
 
     def delete(id : Int64) : Nil

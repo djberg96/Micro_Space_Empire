@@ -7,6 +7,7 @@ describe MicroSpaceEmpire::Store do
     begin
       record = store.create("Test Empire", core_state)
       record.version.should eq(0)
+      record.saved.should be_true
       store.list.first.name.should eq("Test Empire")
       store.rename(record.id, "Renamed Empire")
       store.get(record.id).name.should eq("Renamed Empire")
@@ -20,6 +21,26 @@ describe MicroSpaceEmpire::Store do
 
       store.delete(record.id)
       store.list.should be_empty
+    ensure
+      store.close
+      File.delete(path) if File.exists?(path)
+      File.delete("#{path}-wal") if File.exists?("#{path}-wal")
+      File.delete("#{path}-shm") if File.exists?("#{path}-shm")
+    end
+  end
+
+  it "keeps unnamed games out of the save library until the player saves" do
+    path = "/private/tmp/mse-unsaved-spec-#{Random.rand(1_000_000)}.db"
+    store = MicroSpaceEmpire::Store.new(DB.open("sqlite3://#{path}"))
+    begin
+      draft = store.create_unsaved(core_state)
+      draft.saved.should be_false
+      store.list.should be_empty
+
+      saved = store.save(draft.id, "First Contact")
+      saved.saved.should be_true
+      saved.name.should eq("First Contact")
+      store.list.map(&.name).should eq(["First Contact"])
     ensure
       store.close
       File.delete(path) if File.exists?(path)

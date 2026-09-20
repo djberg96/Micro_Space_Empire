@@ -78,13 +78,32 @@ input[type=text], input:not([type]) { width: 100%; color: var(--ink); background
 .status.completed { color: #111; background: var(--gold); }
 .status.lost { background: #6d211f; }
 .empty-state { padding: 2rem; color: var(--muted); border: 1px dashed var(--line); border-radius: .8rem; }
+.compact-hero { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 1rem 0 1.25rem; border-bottom: 1px solid var(--line); }
+.compact-hero h1 { margin: 0 0 .35rem; font-size: clamp(2.5rem, 5vw, 4.5rem); line-height: .9; white-space: nowrap; }
+.compact-hero p:not(.eyebrow) { margin: 0; color: #b8c5c7; }
+.compact-hero .eyebrow { margin-bottom: .45rem; }
+.quick-start { display: grid; grid-template-columns: minmax(240px, .8fr) minmax(430px, 1.2fr); align-items: center; gap: 2rem; margin-top: 1.25rem; padding: 1.25rem 1.5rem; }
+.quick-start h2, .quick-start p { margin-bottom: .25rem; }
+.quick-start-form { display: grid; grid-template-columns: 1fr minmax(150px, .45fr); align-items: center; gap: 1rem; }
+.quick-start-form .primary { width: 100%; }
+.menu-page .save-library { margin-top: 1.75rem; }
 
 .game-nav { min-height: 3.4rem; display: flex; align-items: center; gap: 1rem; border-bottom: 1px solid var(--line); margin-bottom: 2.5rem; }
 .game-nav > div { display: grid; }
 .game-nav span { color: var(--muted); font-size: .75rem; }
 .brand { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; background: var(--cyan); color: #071112; border-radius: 50%; font-weight: 900; letter-spacing: -.08em; }
 .nav-actions { margin-left: auto; display: flex !important; grid-auto-flow: column; align-items: center; gap: 1rem; }
-.save-options { position: relative; }.save-options summary { color: var(--cyan); font-weight: 500; }.save-options form { position: absolute; right: 0; top: 1.8rem; z-index: 4; display: flex; gap: .4rem; width: min(330px, 80vw); padding: .6rem; background: #0c181e; border: 1px solid var(--line); border-radius: .6rem; box-shadow: 0 12px 30px #0009; }.save-options input { min-width: 0; }
+.game-menu { position: relative; }
+.game-menu > summary { list-style: none; }
+.game-menu-popover { display: grid; gap: .15rem; position: absolute; right: 0; top: calc(100% + .45rem); z-index: 20; width: min(360px, 86vw); padding: .55rem; background: #0c181e; border: 1px solid var(--line); border-radius: .65rem; box-shadow: 0 18px 45px #000c; }
+.game-menu-popover > a, .game-menu-popover > details > summary { padding: .65rem .75rem; color: var(--ink); border-radius: .4rem; font-weight: 700; }
+.game-menu-popover > a:hover, .game-menu-popover > details > summary:hover { background: rgba(121,224,209,.08); color: var(--cyan); }
+.save-options form { display: flex; gap: .4rem; padding: .3rem .75rem .75rem; }.save-options input { min-width: 0; }
+.game-menu-popover > form { margin: 0; }
+.game-menu-popover .menu-link { width: 100%; padding: .65rem .75rem; justify-content: flex-start; color: var(--ink); background: transparent; border: 0; font-weight: 700; }
+.game-menu-popover .menu-link:hover { transform: none; background: rgba(121,224,209,.08); color: var(--cyan); }
+.game-menu-popover .danger-link { color: var(--red); }
+.menu-log summary span { color: var(--muted); margin-left: auto; }.menu-log ol { max-height: 45vh; overflow: auto; margin: .3rem .4rem .5rem 1.8rem; padding-right: .6rem; color: #b7c3c3; font-size: .82rem; line-height: 1.45; }.menu-log li { padding: .18rem 0; }
 .turn-header { display: grid; grid-template-columns: 1fr minmax(250px, .7fr); gap: 2rem; align-items: end; margin-bottom: 1.4rem; }
 .turn-header h1 { font-size: clamp(2.2rem, 5vw, 4.2rem); margin-bottom: 0; }
 .turn-header > p { color: #b9c5c6; line-height: 1.55; margin-bottom: .3rem; }
@@ -135,9 +154,11 @@ details summary { cursor: pointer; font-weight: 800; display: flex; justify-cont
 @keyframes state-enter { from { opacity: .72; } to { opacity: 1; } }
 
 @media (max-width: 800px) {
-  .new-game, .turn-header, .command-grid { grid-template-columns: 1fr; }
+  .new-game, .quick-start, .quick-start-form, .turn-header, .command-grid { grid-template-columns: 1fr; }
   .action-panel { position: static; order: -1; }
   .hero { padding-top: 4vh; }
+  .compact-hero { align-items: flex-start; }
+  .compact-hero h1 { white-space: normal; }
   .game-nav { align-items: flex-start; flex-wrap: wrap; padding-bottom: 1rem; }
   .nav-actions { width: 100%; justify-content: space-between; }
 }
@@ -149,4 +170,136 @@ details summary { cursor: pointer; font-weight: 800; display: flex; justify-cont
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* Full-board layout for desktop play: keep the complete game state in one viewport. */
+@media (min-width: 1100px) and (min-height: 750px) {
+  body:has(.game-shell) { overflow: hidden; }
+  .game-shell {
+    width: 100%; max-width: none; height: 100dvh; margin: 0; padding: .55rem .75rem;
+    display: grid; grid-template-columns: 270px minmax(0, 1fr) 350px;
+    grid-template-rows: 46px 48px 32px minmax(0, 1fr); gap: .45rem .65rem;
+    overflow: hidden;
+  }
+  .game-shell .game-nav {
+    grid-column: 1 / -1; grid-row: 1; min-height: 0; margin: 0; padding: 0 .2rem .4rem;
+  }
+  .game-shell .brand { width: 2.2rem; height: 2.2rem; font-size: .78rem; }
+  .game-shell .nav-actions { margin-left: auto; }
+  .game-shell .game-menu > summary { padding: .45rem .75rem; }
+  .game-shell > .notice { position: fixed; z-index: 30; top: .6rem; left: 50%; transform: translateX(-50%); margin: 0; }
+  .game-shell .turn-header {
+    grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: auto 1fr;
+    align-items: center; gap: 1.2rem; margin: 0; padding: 0 .2rem;
+  }
+  .game-shell .turn-header > div { display: flex; align-items: baseline; gap: .75rem; white-space: nowrap; }
+  .game-shell .turn-header .eyebrow { margin: 0; font-size: .65rem; }
+  .game-shell .turn-header h1 { margin: 0; font-size: 1.48rem; line-height: 1; letter-spacing: -.02em; }
+  .game-shell .turn-header > p { justify-self: end; max-width: none; margin: 0; font-size: .8rem; line-height: 1.25; text-align: right; }
+  .game-shell .transition-message {
+    grid-column: 1 / -1; grid-row: 3; margin: 0; padding: .35rem .65rem;
+    display: flex; align-items: center; font-size: .76rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .game-shell .command-grid { display: contents; }
+  .game-shell .dashboard {
+    grid-column: 1; grid-row: 4; min-width: 0; padding: .7rem; overflow: hidden;
+  }
+  .game-shell .resource-grid { gap: .35rem; }
+  .game-shell .resource { min-width: 0; padding: .55rem .48rem; border-radius: .5rem; }
+  .game-shell .resource > span { font-size: .58rem; letter-spacing: .07em; }
+  .game-shell .resource strong { font-size: 1.35rem; line-height: 1.15; }
+  .game-shell .resource small { font-size: .64rem; }
+  .game-shell .resource em { font-size: .57rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .game-shell .deck-row { gap: .35rem; margin: .7rem 0; }
+  .game-shell .mini-deck { grid-template-columns: 25px 1fr; gap: .35rem; font-size: .63rem; }
+  .game-shell .mini-deck img { width: 25px; }
+  .game-shell .mini-deck b { font-size: .95rem; }
+  .game-shell .tech-panel > summary { font-size: .76rem; padding: .15rem 0; }
+  .game-shell .tech-list { gap: .25rem; margin-top: .45rem; }
+  .game-shell .tech { min-height: 29px; padding: .32rem .45rem; font-size: .69rem; border-radius: .35rem; }
+  .game-shell .tech span { min-width: 0; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .game-shell .tech b { flex: 0 0 auto; margin-left: .35rem; }
+  .game-shell .action-panel {
+    grid-column: 3; grid-row: 4; position: static; min-height: 0; padding: .8rem;
+    overflow: auto; scrollbar-width: thin;
+  }
+  .game-shell .action-panel .eyebrow { margin-bottom: .32rem; font-size: .63rem; }
+  .game-shell .action-panel h2 { margin-bottom: .5rem; font-size: 1.35rem; }
+  .game-shell .action-panel h3 { margin: .7rem 0 .35rem; font-size: .83rem; }
+  .game-shell .action-panel p { margin-bottom: .55rem; font-size: .78rem; line-height: 1.35; }
+  .game-shell .action-panel form { margin: .35rem 0; }
+  .game-shell .action-panel button { padding: .55rem .7rem; font-size: .76rem; }
+  .game-shell .target-list, .game-shell .research-grid { gap: .3rem; }
+  .game-shell .research-grid { margin: .5rem 0; }
+  .game-shell .research-grid button { min-height: 2.35rem; }
+  .game-shell .warning { padding: .35rem .55rem; }
+  .game-shell .die-result { width: 3.2rem; height: 3.2rem; margin: .6rem auto; font-size: 1.55rem; }
+  .game-shell .final-score { margin: .6rem; }
+  .game-shell .final-score strong { font-size: 3.4rem; }
+  .game-shell .score-lines { margin: 0; font-size: .76rem; }
+  .game-shell .score-lines div { padding: .3rem 0; }
+  .game-shell .empire-section {
+    grid-column: 2; grid-row: 4; min-width: 0; min-height: 0; margin: 0; padding: .7rem;
+    overflow: hidden; background: rgba(8, 18, 24, .56); border: 1px solid var(--line); border-radius: .8rem;
+  }
+  .game-shell .empire-section .section-heading { align-items: center; margin: 0 0 .5rem; }
+  .game-shell .empire-section .section-heading .eyebrow { display: none; }
+  .game-shell .empire-section .section-heading h2 { margin: 0; font-size: 1rem; }
+  .game-shell .empire-section .section-heading > span { font-size: .67rem; }
+  .game-shell .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(105px, 150px));
+    align-content: start; justify-content: start; gap: .55rem; height: calc(100% - 1.8rem); overflow: hidden;
+  }
+  .game-shell .system-card figcaption { padding: .3rem .1rem 0; font-size: .64rem; line-height: 1.2; }
+  .game-shell .system-card figcaption em { font-size: .58rem; }
+  .game-shell .reveal-strip {
+    grid-column: 2; grid-row: 4; z-index: 4; align-self: start; justify-self: end;
+    width: 160px; margin: 2.45rem .75rem 0 0; padding: .45rem; border-radius: .65rem;
+    background: rgba(5, 9, 14, .92); border: 1px solid var(--gold); box-shadow: 0 16px 40px #000c;
+  }
+  .game-shell .reveal-strip .eyebrow { margin: 0 0 .35rem; font-size: .56rem; text-align: center; }
+  .game-shell .current-card { width: 100%; }
+  .game-shell.has-reveal .empire-section { padding-right: 174px; }
+  .game-shell .log-panel { display: none; }
+}
+
+@media (min-width: 1800px) and (min-height: 1000px) {
+  .game-shell {
+    grid-template-columns: 350px minmax(0, 1fr) 440px;
+    grid-template-rows: 56px 58px 38px minmax(0, 1fr); gap: .55rem .8rem;
+    padding: .7rem .9rem;
+  }
+  .game-shell .brand { width: 2.6rem; height: 2.6rem; font-size: .9rem; }
+  .game-shell .game-nav > div > strong { font-size: 1.05rem; }
+  .game-shell .turn-header .eyebrow { font-size: .75rem; }
+  .game-shell .turn-header h1 { font-size: 1.85rem; }
+  .game-shell .turn-header > p { font-size: .92rem; }
+  .game-shell .transition-message { font-size: .88rem; }
+  .game-shell .dashboard, .game-shell .action-panel { padding: .9rem; }
+  .game-shell .resource { padding: .7rem .6rem; }
+  .game-shell .resource > span { font-size: .68rem; }
+  .game-shell .resource strong { font-size: 1.65rem; }
+  .game-shell .resource em { font-size: .67rem; }
+  .game-shell .deck-row { margin: .9rem 0; }
+  .game-shell .mini-deck { grid-template-columns: 31px 1fr; font-size: .74rem; }
+  .game-shell .mini-deck img { width: 31px; }
+  .game-shell .mini-deck b { font-size: 1.08rem; }
+  .game-shell .tech-panel > summary { font-size: .88rem; }
+  .game-shell .tech-list { gap: .32rem; margin-top: .6rem; }
+  .game-shell .tech { min-height: 34px; padding: .4rem .55rem; font-size: .8rem; }
+  .game-shell .action-panel .eyebrow { font-size: .72rem; }
+  .game-shell .action-panel h2 { font-size: 1.65rem; }
+  .game-shell .action-panel h3 { font-size: .95rem; }
+  .game-shell .action-panel p { font-size: .9rem; }
+  .game-shell .action-panel button { padding: .68rem .8rem; font-size: .88rem; }
+  .game-shell .research-grid button { min-height: 2.75rem; }
+  .game-shell .empire-section { padding: .9rem; }
+  .game-shell .empire-section .section-heading { margin-bottom: .65rem; }
+  .game-shell .empire-section .section-heading h2 { font-size: 1.2rem; }
+  .game-shell .empire-section .section-heading > span { font-size: .78rem; }
+  .game-shell .card-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 190px)); gap: .7rem; }
+  .game-shell .system-card figcaption { font-size: .75rem; }
+  .game-shell .system-card figcaption em { font-size: .68rem; }
+  .game-shell .reveal-strip { width: 205px; margin: 2.9rem .9rem 0 0; }
+  .game-shell.has-reveal .empire-section { padding-right: 220px; }
 }

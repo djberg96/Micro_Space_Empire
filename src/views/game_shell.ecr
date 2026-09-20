@@ -1,10 +1,22 @@
-<main id="game-shell" class="game-shell" data-transition="<%= h(state.last_transition) %>">
+<main id="game-shell" class="game-shell <%= state.current_event || state.current_system ? "has-reveal" : "" %>" data-transition="<%= h(state.last_transition) %>">
   <nav class="game-nav">
-    <a href="/" class="brand">MSE</a>
-    <div><strong><%= h(record.name) %></strong><span><%= state.expansion ? "Expansion" : "Core" %> rules</span></div>
+    <% if record.saved %><a href="/" class="brand">MSE</a><% else %><span class="brand">MSE</span><% end %>
+    <div><strong><%= record.saved ? h(record.name) : "Unsaved game" %></strong><span><%= state.expansion ? "Expansion" : "Core" %> rules<%= record.saved ? " · autosaved" : "" %></span></div>
     <div class="nav-actions">
-      <details class="save-options"><summary>Rename</summary><form action="/games/<%= record.id %>/rename" method="post"><input name="name" maxlength="50" required value="<%= h(record.name) %>"><button type="submit">Update</button></form></details>
-      <a href="/rules">Rules</a><a class="button ghost" href="/">Save &amp; Main Menu</a>
+      <details class="game-menu">
+        <summary class="button ghost">Menu</summary>
+        <div class="game-menu-popover">
+          <a href="/rules">Rules reference</a>
+          <% if record.saved %>
+            <a href="/">Main Menu</a>
+            <details class="save-options"><summary>Rename campaign</summary><form action="/games/<%= record.id %>/rename" method="post"><input name="name" maxlength="50" required value="<%= h(record.name) %>"><button type="submit">Update</button></form></details>
+          <% else %>
+            <details class="save-options" open><summary>Save game</summary><form action="/games/<%= record.id %>/save" method="post"><input name="name" maxlength="50" required placeholder="Campaign name" autocomplete="off"><button type="submit">Save</button></form></details>
+            <form action="/games/<%= record.id %>/discard" method="post" data-confirm="Discard this unsaved game and return to the main menu?"><button class="menu-link danger-link" type="submit">Discard &amp; Main Menu</button></form>
+          <% end %>
+          <details class="menu-log"><summary>Campaign log <span><%= state.log.size %></span></summary><ol reversed><% state.log.reverse_each do |entry| %><li><%= h(entry) %></li><% end %></ol></details>
+        </div>
+      </details>
     </div>
   </nav>
 
@@ -36,7 +48,7 @@
         <div class="tech-list">
           <% technologies.each do |tech| %>
             <% owned = state.has_technology?(tech.id) %>
-            <div class="tech <%= owned ? "owned" : "" %>" title="<%= h(tech.description) %>">
+            <div class="tech <%= owned ? "owned" : "" %>" title="<%= h(tech.name) %>: <%= h(tech.description) %>">
               <span><%= h(tech.name) %><small><%= h(tech.description) %></small></span><b><%= owned ? "✓" : "#{tech.cost} W" %></b>
             </div>
           <% end %>
@@ -165,7 +177,4 @@
     </div>
   </section>
 
-  <section class="log-panel panel">
-    <details><summary>Campaign log <span><%= state.log.size %> entries</span></summary><ol reversed><% state.log.reverse_each do |entry| %><li><%= h(entry) %></li><% end %></ol></details>
-  </section>
 </main>

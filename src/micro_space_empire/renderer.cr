@@ -11,7 +11,8 @@ module MicroSpaceEmpire
     end
 
     def game(record : SaveRecord, error : String? = nil) : String
-      page(record.name, game_shell(record, error))
+      title = record.saved ? record.name : "Unsaved Game"
+      page(title, game_shell(record, error))
     end
 
     def game_shell(record : SaveRecord, error : String? = nil) : String

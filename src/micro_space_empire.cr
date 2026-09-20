@@ -42,16 +42,33 @@ get "/rules" do |env|
 end
 
 post "/games" do |env|
-  name = env.params.body["name"]? || ""
   expansion = env.params.body["expansion"]? == "true"
   begin
-    record = STORE.create(name, ENGINE.new_game(expansion))
+    record = STORE.create_unsaved(ENGINE.new_game(expansion))
     env.redirect "/games/#{record.id}", status_code: 303
   rescue ex : Exception
     env.response.status_code = 422
     env.response.content_type = "text/html; charset=utf-8"
     RENDERER.menu(STORE.list, ex.message || "Could not create the save.")
   end
+end
+
+post "/games/:id/save" do |env|
+  begin
+    id = env.params.url["id"].to_i64
+    STORE.save(id, env.params.body["name"]? || "")
+    env.redirect "/games/#{id}", status_code: 303
+  rescue ex : Exception
+    env.response.status_code = 422
+    env.response.content_type = "text/html; charset=utf-8"
+    id = env.params.url["id"].to_i64
+    RENDERER.game(STORE.get(id), ex.message)
+  end
+end
+
+post "/games/:id/discard" do |env|
+  STORE.delete(env.params.url["id"].to_i64)
+  env.redirect "/", status_code: 303
 end
 
 get "/games/:id" do |env|
