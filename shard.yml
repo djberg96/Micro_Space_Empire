@@ -1,0 +1,24 @@
+name: micro_space_empire
+version: 0.1.0
+
+authors:
+  - Micro Space Empire contributors
+
+targets:
+  micro_space_empire:
+    main: src/micro_space_empire.cr
+
+dependencies:
+  kemal:
+    github: kemalcr/kemal
+    version: ~> 1.13.0
+  sqlite3:
+    github: crystal-lang/crystal-sqlite3
+    version: ~> 0.23.0
+
+development_dependencies:
+  spec-kemal:
+    github: kemalcr/spec-kemal
+
+crystal: ">= 1.21.0, < 2.0.0"
+license: MIT

@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "technologies": [
+    {"id":"capital-ships","name":"Capital Ships","cost":3,"prerequisite":null,"description":"Military strength may advance beyond 3."},
+    {"id":"forward-starbases","name":"Forward Starbases","cost":4,"prerequisite":"capital-ships","description":"Distant systems may be explored."},
+    {"id":"robot-workers","name":"Robot Workers","cost":2,"prerequisite":null,"description":"Receive half production during a strike, rounded up."},
+    {"id":"planetary-defenses","name":"Planetary Defenses","cost":4,"prerequisite":"robot-workers","description":"Controlled systems gain +1 resistance against invasions."},
+    {"id":"hyper-television","name":"Hyper Television","cost":3,"prerequisite":null,"description":"Controlled systems gain +1 resistance against revolts."},
+    {"id":"interstellar-diplomacy","name":"Interstellar Diplomacy","cost":5,"prerequisite":"hyper-television","description":"One exploration or reconquest automatically succeeds next turn."},
+    {"id":"interspecies-commerce","name":"Interspecies Commerce","cost":2,"prerequisite":null,"description":"Trade 2 of one resource for 1 of the other after collection."},
+    {"id":"interstellar-banking","name":"Interstellar Banking","cost":3,"prerequisite":"interspecies-commerce","description":"Resource storage increases from 3 to 5."}
+  ]
+}

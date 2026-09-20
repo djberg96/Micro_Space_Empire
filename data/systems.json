@@ -1,0 +1,18 @@
+{
+  "version": "v1",
+  "cards": [
+    {"id":"home-world","name":"Home World","distance":"home","resistance":null,"metal":1,"wealth":1,"victory":0,"expansion":false},
+    {"id":"wolf-359","name":"Wolf 359","distance":"near","resistance":5,"metal":1,"wealth":0,"victory":1,"expansion":false},
+    {"id":"proxima","name":"Proxima","distance":"near","resistance":6,"metal":1,"wealth":0,"victory":1,"expansion":false},
+    {"id":"epsilon-eridani","name":"Epsilon Eridani","distance":"near","resistance":8,"metal":0,"wealth":0,"victory":1,"expansion":false},
+    {"id":"cygnus","name":"Cygnus","distance":"near","resistance":5,"metal":0,"wealth":1,"victory":1,"expansion":false},
+    {"id":"tau-ceti","name":"Tau Ceti","distance":"near","resistance":4,"metal":0,"wealth":0,"victory":1,"expansion":false},
+    {"id":"procyon","name":"Procyon","distance":"near","resistance":7,"metal":0,"wealth":1,"victory":1,"expansion":false},
+    {"id":"sirius","name":"Sirius","distance":"near","resistance":6,"metal":0,"wealth":0,"victory":1,"expansion":false},
+    {"id":"canopus","name":"Canopus","distance":"distant","resistance":9,"metal":0,"wealth":1,"victory":2,"expansion":false},
+    {"id":"polaris","name":"Polaris","distance":"distant","resistance":9,"metal":1,"wealth":0,"victory":2,"expansion":false},
+    {"id":"galaxys-edge","name":"Galaxy's Edge","distance":"distant","resistance":10,"metal":0,"wealth":0,"victory":3,"expansion":false},
+    {"id":"aquila","name":"Aquila","distance":"near","resistance":6,"metal":0,"wealth":1,"victory":1,"expansion":true},
+    {"id":"queloz","name":"Queloz","distance":"near","resistance":7,"metal":1,"wealth":0,"victory":1,"expansion":true}
+  ]
+}

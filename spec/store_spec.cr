@@ -1,0 +1,45 @@
+require "./spec_helper"
+
+describe MicroSpaceEmpire::Store do
+  it "creates, reloads, renames, locks, lists, and deletes saves" do
+    path = "/private/tmp/mse-store-spec-#{Random.rand(1_000_000)}.db"
+    store = MicroSpaceEmpire::Store.new(DB.open("sqlite3://#{path}"))
+    begin
+      record = store.create("Test Empire", core_state)
+      record.version.should eq(0)
+      store.list.first.name.should eq("Test Empire")
+      store.rename(record.id, "Renamed Empire")
+      store.get(record.id).name.should eq("Renamed Empire")
+
+      state = record.state
+      state.metal = 2
+      updated = store.update(record.id, 0, state)
+      updated.version.should eq(1)
+      updated.state.metal.should eq(2)
+      expect_raises(MicroSpaceEmpire::StaleSaveError) { store.update(record.id, 0, state) }
+
+      store.delete(record.id)
+      store.list.should be_empty
+    ensure
+      store.close
+      File.delete(path) if File.exists?(path)
+      File.delete("#{path}-wal") if File.exists?("#{path}-wal")
+      File.delete("#{path}-shm") if File.exists?("#{path}-shm")
+    end
+  end
+
+  it "validates names and enforces case-insensitive uniqueness" do
+    path = "/private/tmp/mse-name-spec-#{Random.rand(1_000_000)}.db"
+    store = MicroSpaceEmpire::Store.new(DB.open("sqlite3://#{path}"))
+    begin
+      expect_raises(MicroSpaceEmpire::StoreError) { store.create("   ", core_state) }
+      store.create("Orion", core_state)
+      expect_raises(MicroSpaceEmpire::StoreError, "A save with that name already exists.") { store.create("orion", core_state) }
+    ensure
+      store.close
+      File.delete(path) if File.exists?(path)
+      File.delete("#{path}-wal") if File.exists?("#{path}-wal")
+      File.delete("#{path}-shm") if File.exists?("#{path}-shm")
+    end
+  end
+end

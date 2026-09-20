@@ -1,0 +1,171 @@
+<main id="game-shell" class="game-shell" data-transition="<%= h(state.last_transition) %>">
+  <nav class="game-nav">
+    <a href="/" class="brand">MSE</a>
+    <div><strong><%= h(record.name) %></strong><span><%= state.expansion ? "Expansion" : "Core" %> rules</span></div>
+    <div class="nav-actions">
+      <details class="save-options"><summary>Rename</summary><form action="/games/<%= record.id %>/rename" method="post"><input name="name" maxlength="50" required value="<%= h(record.name) %>"><button type="submit">Update</button></form></details>
+      <a href="/rules">Rules</a><a class="button ghost" href="/">Save &amp; Main Menu</a>
+    </div>
+  </nav>
+
+  <% if error %><div class="notice error" role="alert"><%= h(error) %></div><% end %>
+
+  <header class="turn-header">
+    <div><p class="eyebrow">Year <%= state.year %> · Turn <%= state.turn %></p><h1><%= h(phase_title(state)) %></h1></div>
+    <p><%= h(phase_help(state)) %></p>
+  </header>
+  <div class="transition-message" role="status"><%= h(state.last_transition) %></div>
+
+  <section class="command-grid">
+    <aside class="dashboard panel">
+      <% metal_prod, wealth_prod = @engine.production(state) %>
+      <div class="resource-grid">
+        <div class="resource metal"><span>Metal</span><strong><%= state.metal %><small>/ <%= @engine.storage_cap(state) %></small></strong><em>+<%= metal_prod %> production</em></div>
+        <div class="resource wealth"><span>Wealth</span><strong><%= state.wealth %><small>/ <%= @engine.storage_cap(state) %></small></strong><em>+<%= wealth_prod %> production</em></div>
+        <div class="resource military"><span>Military</span><strong><%= state.military %><small>/ <%= @engine.military_cap(state) %></small></strong><em>combat strength</em></div>
+      </div>
+
+      <div class="deck-row">
+        <div class="mini-deck"><img src="/assets/cards/systems/wolf-359/back.webp" alt="System card back"><span>Near <b><%= state.near_deck.size %></b></span></div>
+        <div class="mini-deck"><img src="/assets/cards/systems/canopus/back.webp" alt="System card back"><span>Distant <b><%= state.distant_deck.size %></b></span></div>
+        <div class="mini-deck"><img src="/assets/cards/events/asteroid/back.webp" alt="Event card back"><span>Events <b><%= state.event_deck.size %></b></span></div>
+      </div>
+
+      <details class="tech-panel" open>
+        <summary>Technology <span><%= state.technologies.size %>/8</span></summary>
+        <div class="tech-list">
+          <% technologies.each do |tech| %>
+            <% owned = state.has_technology?(tech.id) %>
+            <div class="tech <%= owned ? "owned" : "" %>" title="<%= h(tech.description) %>">
+              <span><%= h(tech.name) %><small><%= h(tech.description) %></small></span><b><%= owned ? "✓" : "#{tech.cost} W" %></b>
+            </div>
+          <% end %>
+        </div>
+      </details>
+    </aside>
+
+    <section class="action-panel panel">
+      <p class="eyebrow">Current decision</p>
+      <% if !state.active? %>
+        <% score = state.score.not_nil! %>
+        <div class="final-score"><strong><%= score.total %></strong><span>Victory Points</span></div>
+        <dl class="score-lines">
+          <div><dt>Controlled systems</dt><dd><%= score.systems %></dd></div>
+          <div><dt>Technologies</dt><dd><%= score.technologies %></dd></div>
+          <div><dt>Exploration bonus</dt><dd><%= score.exploration_bonus %></dd></div>
+          <div><dt>Scientific bonus</dt><dd><%= score.scientific_bonus %></dd></div>
+          <div><dt>Warlord bonus</dt><dd><%= score.warlord_bonus %></dd></div>
+        </dl>
+      <% elsif state.phase == "phase_one" && state.subphase == "choose" %>
+        <h2>Choose your approach</h2>
+        <div class="action-stack">
+          <form class="async-action" action="/games/<%= record.id %>/actions" method="post">
+            <input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="explore_near">
+            <button class="primary" <%= @engine.can_explore_near?(state) ? "" : "disabled title=\"No near cards remain\"" %>>Explore a near system</button>
+          </form>
+          <form class="async-action" action="/games/<%= record.id %>/actions" method="post">
+            <input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="explore_distant">
+            <button <%= @engine.can_explore_distant?(state) ? "" : "disabled title=\"Requires Forward Starbases, a card in the deck, and no unaligned near systems\"" %>>Explore a distant system</button>
+          </form>
+          <form class="async-action" action="/games/<%= record.id %>/actions" method="post">
+            <input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="bide">
+            <button class="ghost">Bide time</button>
+          </form>
+        </div>
+        <% unless state.unaligned_systems.empty? %>
+          <h3>Or reconquer</h3>
+          <div class="target-list">
+            <% state.unaligned_systems.each do |system| %>
+              <form class="async-action" action="/games/<%= record.id %>/actions" method="post">
+                <input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="conquer"><input type="hidden" name="target" value="<%= h(system.id) %>">
+                <button><%= h(system_card(system.id).name) %> · R<%= system_card(system.id).resistance %></button>
+              </form>
+            <% end %>
+          </div>
+        <% end %>
+      <% elsif state.phase == "phase_one" && state.subphase == "attack" %>
+        <% card = system_card(state.pending_target.not_nil!) %>
+        <h2>Attack <%= h(card.name) %></h2>
+        <p>Your <b><%= state.military %> Military</b> plus a d6 must meet resistance <b><%= card.resistance %></b>.</p>
+        <form class="async-action" action="/games/<%= record.id %>/actions" method="post">
+          <input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="roll_attack">
+          <button class="primary die-button">Roll attack die</button>
+        </form>
+        <% if state.diplomacy_available_turn == state.turn %>
+          <form class="async-action" action="/games/<%= record.id %>/actions" method="post">
+            <input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="use_diplomacy">
+            <button>Use Interstellar Diplomacy</button>
+          </form>
+        <% end %>
+      <% elsif state.phase == "collect" && state.subphase == "collect" %>
+        <h2>Collect production</h2>
+        <% if state.strike_collections > 0 %><p class="warning">A Strike affects this collection<%= state.has_technology?("robot-workers") ? "; Robot Workers recover half" : "" %>.</p><% end %>
+        <form class="async-action" action="/games/<%= record.id %>/actions" method="post">
+          <input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="collect_resources"><button class="primary">Collect resources</button>
+        </form>
+      <% elsif state.phase == "collect" %>
+        <h2>Commerce window</h2>
+        <p>Make one optional trade, or continue to construction.</p>
+        <% if state.has_technology?("interspecies-commerce") && !state.collection_trade_used %>
+          <div class="button-row">
+            <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="trade_metal_for_wealth"><button <%= state.metal >= 2 && state.wealth < @engine.storage_cap(state) ? "" : "disabled" %>>2 Metal → 1 Wealth</button></form>
+            <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="trade_wealth_for_metal"><button <%= state.wealth >= 2 && state.metal < @engine.storage_cap(state) ? "" : "disabled" %>>2 Wealth → 1 Metal</button></form>
+          </div>
+        <% end %>
+        <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="finish_collection"><button class="primary">Continue to build</button></form>
+      <% elsif state.phase == "build" %>
+        <h2>Build your empire</h2>
+        <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="build_military"><button title="<%= h(military_hint(state)) %>" <%= !state.built_military && state.metal >= 1 && state.wealth >= 1 && state.military < @engine.military_cap(state) ? "" : "disabled" %>>Build Military · 1 M + 1 W</button></form>
+        <div class="research-grid">
+          <% technologies.each do |tech| %>
+            <% next if state.has_technology?(tech.id) %>
+            <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="research"><input type="hidden" name="target" value="<%= h(tech.id) %>"><button title="<%= h(research_hint(state, tech)) %>" <%= @engine.can_research?(state, tech) ? "" : "disabled" %>><span><%= h(tech.name) %></span><b><%= tech.cost %> W</b></button></form>
+          <% end %>
+        </div>
+        <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="finish_build"><button class="primary">Continue to event</button></form>
+      <% elsif state.phase == "event" && state.subphase == "reveal" %>
+        <h2>Unknown signals</h2><p>Reveal the next event card. Its effect is autosaved immediately.</p>
+        <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="reveal_event"><button class="primary">Reveal event</button></form>
+      <% elsif state.phase == "event" && state.subphase == "roll_event" %>
+        <% event = event_card(state.current_event.not_nil!) %><% target = system_card(state.pending_target.not_nil!) %>
+        <h2><%= h(event.name) %></h2><p><%= h(target.name) %> is under threat. Roll the opposing force.</p>
+        <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="roll_event"><button class="primary die-button">Roll event die</button></form>
+      <% elsif state.phase == "event" && state.subphase == "pandemic_choice" %>
+        <h2>Contain the Pandemic</h2><p>Pay for a cure or permanently lose <b><%= h(system_card(state.pending_target.not_nil!).name) %></b>.</p>
+        <div class="action-stack">
+          <% {"wealth" => "Spend 1 Wealth", "metal" => "Spend 2 Metal", "lose" => "Lose the system"}.each do |value, label| %>
+            <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="resolve_pandemic"><input type="hidden" name="choice" value="<%= value %>"><button class="<%= value == "lose" ? "danger" : "" %>" <%= value == "wealth" && state.wealth < 1 || value == "metal" && state.metal < 2 ? "disabled" : "" %>><%= label %></button></form>
+          <% end %>
+        </div>
+      <% elsif state.phase == "event" %>
+        <h2>Event resolved</h2><p><%= h(state.last_transition) %></p>
+        <% if roll = state.last_roll %><div class="die-result" aria-label="Die result <%= roll %>"><%= roll %></div><% end %>
+        <form class="async-action" action="/games/<%= record.id %>/actions" method="post"><input type="hidden" name="expected_version" value="<%= record.version %>"><input type="hidden" name="action" value="finish_event"><button class="primary">Continue</button></form>
+      <% end %>
+      <% if roll = state.last_roll %><div class="die-result floating" aria-label="Last die result <%= roll %>"><%= roll %></div><% end %>
+    </section>
+  </section>
+
+  <% if current = state.current_event %>
+    <section class="reveal-strip"><p class="eyebrow">Current event</p><img class="card current-card" src="<%= event_card(current).front_path %>" alt="<%= h(event_card(current).name) %>"></section>
+  <% elsif current = state.current_system %>
+    <section class="reveal-strip"><p class="eyebrow">Discovered system</p><img class="card current-card" src="<%= system_card(current).front_path %>" alt="<%= h(system_card(current).name) %>"></section>
+  <% end %>
+
+  <section class="empire-section">
+    <div class="section-heading"><div><p class="eyebrow">Star chart</p><h2>Your empire</h2></div><span><%= state.controlled_systems.size %> controlled · <%= state.unaligned_systems.size %> unaligned</span></div>
+    <div class="card-grid">
+      <% state.systems.reject { |system| system.status == "discarded" || system.status == "pending" }.each do |system| %>
+        <% card = system_card(system.id) %>
+        <figure class="system-card <%= h(system.status) %>">
+          <img class="card" src="<%= card.front_path %>" alt="<%= h(card.name) %>">
+          <figcaption><span><%= h(card.name) %></span><em><%= h(system.status) %><% if system.production_disabled_collections > 0 %> · storms ×<%= system.production_disabled_collections %><% end %></em></figcaption>
+        </figure>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="log-panel panel">
+    <details><summary>Campaign log <span><%= state.log.size %> entries</span></summary><ol reversed><% state.log.reverse_each do |entry| %><li><%= h(entry) %></li><% end %></ol></details>
+  </section>
+</main>

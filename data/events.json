@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "cards": [
+    {"id":"asteroid","name":"Asteroid","kind":"resource","resource":"wealth","year1":1,"year2":1,"expansion":false},
+    {"id":"strike","name":"Strike","kind":"strike","resource":null,"year1":0,"year2":0,"expansion":false},
+    {"id":"derelict-ship","name":"Derelict Ship","kind":"resource","resource":"metal","year1":1,"year2":1,"expansion":false},
+    {"id":"revolt-major","name":"Revolt","kind":"revolt","resource":null,"year1":1,"year2":3,"expansion":false},
+    {"id":"small-invasion","name":"Small Invasion Force","kind":"invasion","resource":null,"year1":1,"year2":2,"expansion":false},
+    {"id":"peace-and-quiet","name":"Peace & Quiet","kind":"none","resource":null,"year1":0,"year2":0,"expansion":false},
+    {"id":"large-invasion","name":"Large Invasion Force","kind":"invasion","resource":null,"year1":2,"year2":3,"expansion":false},
+    {"id":"revolt-minor","name":"Revolt","kind":"revolt","resource":null,"year1":1,"year2":2,"expansion":false},
+    {"id":"meteor-storms","name":"Meteor Storms","kind":"meteor","resource":null,"year1":0,"year2":0,"expansion":true},
+    {"id":"pandemic","name":"Pandemic","kind":"pandemic","resource":null,"year1":0,"year2":0,"expansion":true},
+    {"id":"alien-mission","name":"Alien Diplomatic Mission","kind":"alien","resource":null,"year1":0,"year2":0,"expansion":true}
+  ]
+}
