@@ -57,7 +57,8 @@ post "/games/:id/save" do |env|
   begin
     id = env.params.url["id"].to_i64
     STORE.save(id, env.params.body["name"]? || "")
-    env.redirect "/games/#{id}", status_code: 303
+    destination = env.params.body["destination"]? == "home" ? "/" : "/games/#{id}"
+    env.redirect destination, status_code: 303
   rescue ex : Exception
     env.response.status_code = 422
     env.response.content_type = "text/html; charset=utf-8"
@@ -69,6 +70,31 @@ end
 post "/games/:id/discard" do |env|
   STORE.delete(env.params.url["id"].to_i64)
   env.redirect "/", status_code: 303
+end
+
+post "/games/:id/start-new" do |env|
+  id = env.params.url["id"].to_i64
+  begin
+    current = STORE.get(id)
+    expansion = env.params.body["expansion"]? == "true"
+    preserve = env.params.body["preserve"]? || ""
+    save_name = nil.as(String?)
+    unless current.saved
+      case preserve
+      when "save"
+        save_name = env.params.body["name"]? || ""
+      when "discard"
+      else
+        raise MicroSpaceEmpire::StoreError.new("Choose whether to save the current game first.")
+      end
+    end
+    next_game = STORE.start_new(id, ENGINE.new_game(expansion), save_name)
+    env.redirect "/games/#{next_game.id}", status_code: 303
+  rescue ex : Exception
+    env.response.status_code = 422
+    env.response.content_type = "text/html; charset=utf-8"
+    RENDERER.game(STORE.get(id), ex.message || "Could not start a new game.")
+  end
 end
 
 get "/games/:id" do |env|

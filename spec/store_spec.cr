@@ -49,6 +49,29 @@ describe MicroSpaceEmpire::Store do
     end
   end
 
+  it "atomically saves or discards the current draft when starting a new game" do
+    path = "/private/tmp/mse-start-new-spec-#{Random.rand(1_000_000)}.db"
+    store = MicroSpaceEmpire::Store.new(DB.open("sqlite3://#{path}"))
+    begin
+      first = store.create_unsaved(core_state)
+      second = store.start_new(first.id, core_state, "First Contact")
+      store.get(first.id).saved.should be_true
+      store.get(first.id).name.should eq("First Contact")
+      second.saved.should be_false
+      store.list.map(&.name).should eq(["First Contact"])
+
+      third = store.start_new(second.id, core_state)
+      expect_raises(MicroSpaceEmpire::StoreError, "Save not found.") { store.get(second.id) }
+      third.saved.should be_false
+      store.list.map(&.name).should eq(["First Contact"])
+    ensure
+      store.close
+      File.delete(path) if File.exists?(path)
+      File.delete("#{path}-wal") if File.exists?("#{path}-wal")
+      File.delete("#{path}-shm") if File.exists?("#{path}-shm")
+    end
+  end
+
   it "validates names and enforces case-insensitive uniqueness" do
     path = "/private/tmp/mse-name-spec-#{Random.rand(1_000_000)}.db"
     store = MicroSpaceEmpire::Store.new(DB.open("sqlite3://#{path}"))

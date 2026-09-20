@@ -12,12 +12,34 @@
             </select>
           </label>
           <a href="/rules">Rules reference</a>
+          <details class="new-game-options">
+            <summary>Start new game</summary>
+            <form action="/games/<%= record.id %>/start-new" method="post">
+              <label class="check-row"><input type="checkbox" name="expansion" value="true"><span>Optional expansion<small>Uses the expanded system and event pools.</small></span></label>
+              <% if record.saved %>
+                <p class="muted">This campaign is autosaved and will remain in your library.</p>
+                <button class="primary" type="submit" name="preserve" value="keep">Start new game</button>
+              <% else %>
+                <p class="muted">Save this campaign first, or start without keeping it.</p>
+                <input type="text" name="name" maxlength="50" placeholder="Current campaign name" autocomplete="off">
+                <div class="new-game-actions">
+                  <button class="primary" type="submit" name="preserve" value="save">Save &amp; start</button>
+                  <button type="submit" name="preserve" value="discard" data-confirm="Start a new game without saving this campaign?">Start without saving</button>
+                </div>
+              <% end %>
+            </form>
+          </details>
           <% if record.saved %>
-            <a href="/">Main Menu</a>
+            <a href="/">Home</a>
             <details class="save-options"><summary>Rename campaign</summary><form action="/games/<%= record.id %>/rename" method="post"><input name="name" maxlength="50" required value="<%= h(record.name) %>"><button type="submit">Update</button></form></details>
           <% else %>
             <details class="save-options" open><summary>Save game</summary><form action="/games/<%= record.id %>/save" method="post"><input name="name" maxlength="50" required placeholder="Campaign name" autocomplete="off"><button type="submit">Save</button></form></details>
-            <form action="/games/<%= record.id %>/discard" method="post" data-confirm="Discard this unsaved game and return to the main menu?"><button class="menu-link danger-link" type="submit">Discard &amp; Main Menu</button></form>
+            <details class="home-options">
+              <summary>Home</summary>
+              <p class="muted">Save this campaign before returning home?</p>
+              <form action="/games/<%= record.id %>/save" method="post"><input type="hidden" name="destination" value="home"><input name="name" maxlength="50" required placeholder="Campaign name" autocomplete="off"><button class="primary" type="submit">Save &amp; go home</button></form>
+              <form action="/games/<%= record.id %>/discard" method="post" data-confirm="Go home without saving this campaign?"><button class="menu-link danger-link" type="submit">Go home without saving</button></form>
+            </details>
           <% end %>
           <details class="menu-log"><summary>Campaign log <span><%= state.log.size %></span></summary><ol reversed><% state.log.reverse_each do |entry| %><li><%= h(entry) %></li><% end %></ol></details>
         </div>

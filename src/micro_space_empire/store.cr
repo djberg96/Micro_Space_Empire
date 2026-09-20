@@ -90,19 +90,54 @@ module MicroSpaceEmpire
     end
 
     def create_unsaved(state : GameState) : SaveRecord
-      db.exec "DELETE FROM games WHERE saved = 0"
       now = timestamp
       internal_name = "__unsaved__#{Time.utc.to_unix_ms}_#{Random.rand(100_000)}"
-      result = db.exec(
-        "INSERT INTO games(name, ruleset, status, state_json, lock_version, created_at, updated_at, saved) VALUES (?, ?, ?, ?, 0, ?, ?, 0)",
-        internal_name,
-        state.content_version,
-        state.status,
-        state.to_json,
-        now,
-        now
-      )
-      get(result.last_insert_id)
+      id = 0_i64
+      db.transaction do |tx|
+        tx.connection.exec "DELETE FROM games WHERE saved = 0"
+        result = tx.connection.exec(
+          "INSERT INTO games(name, ruleset, status, state_json, lock_version, created_at, updated_at, saved) VALUES (?, ?, ?, ?, 0, ?, ?, 0)",
+          internal_name,
+          state.content_version,
+          state.status,
+          state.to_json,
+          now,
+          now
+        )
+        id = result.last_insert_id
+      end
+      get(id)
+    end
+
+    def start_new(current_id : Int64, state : GameState, save_current_as : String? = nil) : SaveRecord
+      clean_name = save_current_as.try { |name| validate_name(name) }
+      if clean_name && db.query_one?("SELECT 1 FROM games WHERE name = ? COLLATE NOCASE AND id != ?", clean_name, current_id, as: Int32)
+        raise StoreError.new("A save with that name already exists.")
+      end
+
+      now = timestamp
+      internal_name = "__unsaved__#{Time.utc.to_unix_ms}_#{Random.rand(100_000)}"
+      new_id = 0_i64
+      db.transaction do |tx|
+        if clean_name
+          result = tx.connection.exec("UPDATE games SET name = ?, saved = 1, updated_at = ? WHERE id = ? AND saved = 0", clean_name, now, current_id)
+          raise StoreError.new("The current game could not be saved.") unless result.rows_affected == 1
+        else
+          tx.connection.exec "DELETE FROM games WHERE id = ? AND saved = 0", current_id
+        end
+        tx.connection.exec "DELETE FROM games WHERE saved = 0"
+        result = tx.connection.exec(
+          "INSERT INTO games(name, ruleset, status, state_json, lock_version, created_at, updated_at, saved) VALUES (?, ?, ?, ?, 0, ?, ?, 0)",
+          internal_name,
+          state.content_version,
+          state.status,
+          state.to_json,
+          now,
+          now
+        )
+        new_id = result.last_insert_id
+      end
+      get(new_id)
     end
 
     def get(id : Int64) : SaveRecord

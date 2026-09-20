@@ -136,11 +136,12 @@
   };
 
   const confirmationForms = () => {
-    document.querySelectorAll("form[data-confirm]").forEach((form) => {
-      if (form.dataset.bound) return;
-      form.dataset.bound = "true";
+    document.querySelectorAll("form").forEach((form) => {
+      if (form.dataset.confirmBound) return;
+      form.dataset.confirmBound = "true";
       form.addEventListener("submit", (event) => {
-        if (!window.confirm(form.dataset.confirm)) event.preventDefault();
+        const message = event.submitter?.dataset.confirm || form.dataset.confirm;
+        if (message && !window.confirm(message)) event.preventDefault();
       });
     });
   };
