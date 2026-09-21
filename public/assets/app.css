@@ -19,6 +19,9 @@
   --popover: #0c181e;
   --soft-surface: rgba(255,255,255,.035);
   --board-bg: rgba(8, 18, 24, .56);
+  --empire-art-opacity: .26;
+  --empire-art-blend: screen;
+  --empire-art-filter: saturate(.72) contrast(.92);
   --secondary: #b8c5c7;
   --transition-ink: #cfdddd;
   --primary-ink: #041211;
@@ -31,7 +34,7 @@ html[data-theme="nebula"] {
   --line: rgba(235, 203, 255, .22); --cyan: #d5a7ff; --cyan-dark: #4d2b61; --gold: #ffcc70; --red: #ff8b9d;
   --space: #100d1d; --space-2: #24152f; --glow-a: rgba(151, 80, 213, .32); --glow-b: rgba(49, 84, 185, .25); --star: #eadcff;
   --button-bg: #402b52; --field-bg: #170f22; --popover: #25172f; --soft-surface: rgba(255,255,255,.05);
-  --board-bg: rgba(25, 14, 36, .66); --secondary: #d9cde0; --transition-ink: #eee2f2; --primary-ink: #24132c;
+  --board-bg: rgba(25, 14, 36, .66); --empire-art-opacity: .23; --secondary: #d9cde0; --transition-ink: #eee2f2; --primary-ink: #24132c;
 }
 
 html[data-theme="tactical"] {
@@ -39,7 +42,7 @@ html[data-theme="tactical"] {
   --line: rgba(158, 218, 238, .24); --cyan: #82e5ee; --cyan-dark: #164e60; --gold: #f1c86e; --red: #ff8f7e;
   --space: #0b2539; --space-2: #123c56; --glow-a: rgba(34, 148, 178, .28); --glow-b: rgba(50, 99, 161, .25); --star: #d9f6ff;
   --button-bg: #23526a; --field-bg: #0d2c40; --popover: #14394d; --soft-surface: rgba(185,232,245,.06);
-  --board-bg: rgba(11, 38, 55, .7); --secondary: #c2d7df; --transition-ink: #d8edf2; --primary-ink: #06242b;
+  --board-bg: rgba(11, 38, 55, .7); --empire-art-opacity: .22; --secondary: #c2d7df; --transition-ink: #d8edf2; --primary-ink: #06242b;
 }
 
 html[data-theme="command"] {
@@ -48,7 +51,7 @@ html[data-theme="command"] {
   --line: rgba(39, 69, 75, .22); --cyan: #176f76; --cyan-dark: #c0dfdb; --gold: #956000; --red: #b64a41;
   --space: #d3ddda; --space-2: #edf0e8; --glow-a: rgba(42, 133, 139, .18); --glow-b: rgba(190, 138, 52, .16); --star: #526b70;
   --button-bg: #d8e3df; --field-bg: #fffdf5; --popover: #f7f4e8; --soft-surface: rgba(28,67,73,.055);
-  --board-bg: rgba(245, 244, 232, .76); --secondary: #4f6268; --transition-ink: #344c52; --primary-ink: #ffffff; --danger-ink: #ffffff;
+  --board-bg: rgba(245, 244, 232, .76); --empire-art-opacity: .13; --empire-art-blend: multiply; --empire-art-filter: saturate(.45) contrast(.86); --secondary: #4f6268; --transition-ink: #344c52; --primary-ink: #ffffff; --danger-ink: #ffffff;
 }
 
 * { box-sizing: border-box; }
@@ -348,8 +351,16 @@ details summary { cursor: pointer; font-weight: 800; display: flex; justify-cont
   .game-shell .score-lines div { padding: .3rem 0; }
   .game-shell .empire-section {
     grid-column: 3; grid-row: 4; min-width: 0; min-height: 0; margin: 0; padding: .7rem;
-    overflow: hidden; background: var(--board-bg); border: 1px solid var(--line); border-radius: .8rem;
+    position: relative; isolation: isolate; overflow: hidden; background: var(--board-bg); border: 1px solid var(--line); border-radius: .8rem;
   }
+  .game-shell .empire-section::before {
+    content: ""; position: absolute; z-index: 1; inset: 2.6rem 0 0;
+    pointer-events: none; background: url("/assets/empire-watermark.webp") center / cover no-repeat;
+    opacity: var(--empire-art-opacity); filter: var(--empire-art-filter); mix-blend-mode: var(--empire-art-blend);
+    -webkit-mask-image: radial-gradient(ellipse at 62% 56%, #000 28%, rgba(0, 0, 0, .76) 66%, transparent 100%);
+    mask-image: radial-gradient(ellipse at 62% 56%, #000 28%, rgba(0, 0, 0, .76) 66%, transparent 100%);
+  }
+  .game-shell .empire-section > * { position: relative; z-index: 2; }
   .game-shell .empire-section .section-heading { align-items: center; margin: 0 0 .5rem; }
   .game-shell .empire-section .section-heading .eyebrow { display: none; }
   .game-shell .empire-section .section-heading h2 { margin: 0; font-size: 1rem; }
