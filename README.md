@@ -40,36 +40,30 @@ SQLite, OpenSSL, PCRE2, and the Boehm garbage collector are linked into the pack
 
 The generated executable targets the macOS version and architecture of the build Mac. Build on the oldest Mac you intend to support, and build once on each architecture if you need both Apple Silicon and Intel executables.
 
-## Linux and Windows server executables
+## Fedora standalone executable and Windows server executable
 
 The native window under `src/macos/` is macOS-specific. The Crystal server itself is portable and already embeds the manifests, CSS, JavaScript, and card artwork. Linux and Windows builds therefore need only the resulting executable plus any native libraries described below. They run headlessly by default; set `MSE_OPEN_BROWSER=true` to open the game in the platform's default browser.
 
 Build on the target operating system or in a matching CI/container runner. Crystal's [basic cross-compilation mode](https://crystal-lang.org/reference/latest/syntax_and_semantics/cross-compilation.html) emits an object file that must still be linked against the target system's libraries, so invoking it directly from macOS does not produce a finished Linux or Windows executable.
 
-### Linux: portable static executable
+### Fedora Linux: native standalone executable
 
-Crystal recommends Alpine Linux and musl for fully static Linux binaries. With Docker installed, this builds an x86-64 executable that runs on both musl- and glibc-based distributions:
-
-```sh
-mkdir -p dist
-docker run --rm --platform linux/amd64 \
-  -v "$PWD:/workspace" -w /workspace \
-  crystallang/crystal:1.21.0-alpine sh -lc '
-    apk add --no-cache sqlite-static
-    shards install --production
-    crystal build --release --no-debug --static -D standalone \
-      src/micro_space_empire.cr \
-      -o dist/micro-space-empire-linux-x86_64
-  '
-```
-
-Use `--platform linux/arm64` and change the output name for an ARM64 build. Confirm that the result is static with `file dist/micro-space-empire-linux-x86_64` or `ldd`; then run it with:
+Build directly on Fedora—no Docker or Alpine image is needed. The executable contains the rules manifests, interface assets, and card artwork, so the `dist/` binary is the only application file you need to keep:
 
 ```sh
-MSE_OPEN_BROWSER=true ./dist/micro-space-empire-linux-x86_64
+sudo dnf install crystal shards gcc sqlite-devel openssl-devel pcre2-devel zlib-devel
+shards install --production
+make test
+make standalone
 ```
 
-See Crystal's [static-linking guide](https://crystal-lang.org/reference/latest/guides/static_linking.html) for the musl rationale and library lookup details.
+The builder names the result for the build machine's architecture, for example `dist/micro-space-empire-fedora-x86_64` or `dist/micro-space-empire-fedora-aarch64`. Run it and open the game in your default browser with:
+
+```sh
+MSE_OPEN_BROWSER=true ./dist/micro-space-empire-fedora-$(uname -m)
+```
+
+By default saves are written under `var/` in the current directory. Set `MSE_DATABASE_PATH` to put the database elsewhere. The executable is Fedora-native and dynamically uses Fedora's standard SQLite, OpenSSL, zlib, PCRE2, C, and math runtime libraries; Crystal, Shards, the source tree, and the build toolchain are not needed to run it. Build on the oldest Fedora release you intend to support and build once per architecture.
 
 ### Windows: x86-64 executable and DLLs
 

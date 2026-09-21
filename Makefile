@@ -1,4 +1,4 @@
-.PHONY: setup assets dev test build standalone clean
+.PHONY: setup assets dev test build standalone standalone-linux clean
 
 setup:
 	shards install
@@ -20,6 +20,9 @@ build:
 standalone:
 	sh scripts/build_standalone.sh
 
+standalone-linux:
+	sh scripts/build_standalone_linux.sh
+
 clean:
-	rm -f bin/micro_space_empire dist/micro-space-empire-server
+	rm -f bin/micro_space_empire dist/micro-space-empire-server dist/micro-space-empire-fedora-*
 	rm -rf "dist/Micro Space Empire.app"

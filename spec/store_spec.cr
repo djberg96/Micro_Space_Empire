@@ -2,7 +2,7 @@ require "./spec_helper"
 
 describe MicroSpaceEmpire::Store do
   it "creates, reloads, renames, locks, lists, and deletes saves" do
-    path = "/private/tmp/mse-store-spec-#{Random.rand(1_000_000)}.db"
+    path = File.join(Dir.tempdir, "mse-store-spec-#{Random.rand(1_000_000)}.db")
     store = MicroSpaceEmpire::Store.new(DB.open("sqlite3://#{path}"))
     begin
       record = store.create("Test Empire", core_state)
@@ -30,7 +30,7 @@ describe MicroSpaceEmpire::Store do
   end
 
   it "keeps unnamed games out of the save library until the player saves" do
-    path = "/private/tmp/mse-unsaved-spec-#{Random.rand(1_000_000)}.db"
+    path = File.join(Dir.tempdir, "mse-unsaved-spec-#{Random.rand(1_000_000)}.db")
     store = MicroSpaceEmpire::Store.new(DB.open("sqlite3://#{path}"))
     begin
       draft = store.create_unsaved(core_state)
@@ -50,7 +50,7 @@ describe MicroSpaceEmpire::Store do
   end
 
   it "atomically saves or discards the current draft when starting a new game" do
-    path = "/private/tmp/mse-start-new-spec-#{Random.rand(1_000_000)}.db"
+    path = File.join(Dir.tempdir, "mse-start-new-spec-#{Random.rand(1_000_000)}.db")
     store = MicroSpaceEmpire::Store.new(DB.open("sqlite3://#{path}"))
     begin
       first = store.create_unsaved(core_state)
@@ -73,7 +73,7 @@ describe MicroSpaceEmpire::Store do
   end
 
   it "validates names and enforces case-insensitive uniqueness" do
-    path = "/private/tmp/mse-name-spec-#{Random.rand(1_000_000)}.db"
+    path = File.join(Dir.tempdir, "mse-name-spec-#{Random.rand(1_000_000)}.db")
     store = MicroSpaceEmpire::Store.new(DB.open("sqlite3://#{path}"))
     begin
       expect_raises(MicroSpaceEmpire::StoreError) { store.create("   ", core_state) }

@@ -2,6 +2,11 @@
 set -eu
 
 project_root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+
+if [ "$(uname -s)" = "Linux" ]; then
+  exec sh "$project_root/scripts/build_standalone_linux.sh"
+fi
+
 dist_dir="$project_root/dist"
 server_output="$dist_dir/micro-space-empire-server"
 app_bundle="$dist_dir/Micro Space Empire.app"
