@@ -2,7 +2,6 @@
 
 setup:
 	shards install
-	sh scripts/extract_card_assets.sh
 
 assets:
 	sh scripts/extract_card_assets.sh

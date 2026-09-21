@@ -52,7 +52,7 @@ Build directly on Fedora—no Docker or Alpine image is needed. The desktop exec
 
 ```sh
 sudo dnf install crystal shards gcc binutils sqlite-devel openssl-devel pcre2-devel zlib-devel gtk4 webkitgtk6.0
-shards install --production
+make setup
 make test
 make standalone
 ```

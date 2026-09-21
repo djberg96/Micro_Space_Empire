@@ -2,8 +2,15 @@
 set -eu
 
 project_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-task_work=$(mktemp -d /private/tmp/mse-card-assets.XXXXXX)
+task_work=$(mktemp -d "${TMPDIR:-/tmp}/mse-card-assets.XXXXXX")
 trap 'rm -rf "$task_work"' EXIT INT TERM
+
+for command in pdftoppm magick; do
+  if ! command -v "$command" >/dev/null 2>&1; then
+    echo "$command is required to regenerate the card assets." >&2
+    exit 1
+  fi
+done
 
 pdftoppm -png -r 300 "$project_root/Images/MSE_decks_v92.pdf" "$task_work/base"
 pdftoppm -png -r 300 "$project_root/Images/MSE-5-new-cards.pdf" "$task_work/expansion"
