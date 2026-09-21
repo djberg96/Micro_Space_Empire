@@ -1,6 +1,7 @@
 /bin/
 /dist/
 /lib/
+/electron/node_modules/
 /.shards/
 /var/*.db
 /var/*.db-*

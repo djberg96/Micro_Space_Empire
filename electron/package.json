@@ -1,0 +1,49 @@
+{
+  "name": "micro-space-empire-electron",
+  "private": true,
+  "version": "0.1.0",
+  "productName": "Micro Space Empire",
+  "desktopName": "micro-space-empire.desktop",
+  "description": "Chromium desktop shell for Micro Space Empire",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-builder --linux AppImage"
+  },
+  "build": {
+    "appId": "org.microspaceempire.game",
+    "asar": true,
+    "toolsets": {
+      "appimage": "1.0.3"
+    },
+    "directories": {
+      "output": "../dist/electron"
+    },
+    "files": [
+      "main.cjs",
+      "server.cjs",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../dist/micro-space-empire-electron-server",
+        "to": "micro-space-empire-server"
+      },
+      {
+        "from": "../dist/micro-space-empire-electron-libs",
+        "to": "server-libs"
+      }
+    ],
+    "linux": {
+      "target": "AppImage",
+      "category": "Game",
+      "executableName": "micro-space-empire",
+      "syncDesktopName": true,
+      "artifactName": "micro-space-empire-${arch}.AppImage"
+    }
+  },
+  "devDependencies": {
+    "electron": "44.4.3",
+    "electron-builder": "^26.15.3"
+  }
+}
