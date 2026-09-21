@@ -28,7 +28,13 @@ private def game_url(config : Kemal::Config) : String
 end
 
 private def open_game_in_browser(url : String) : Nil
-  status = Process.run("/usr/bin/open", [url], output: Process::Redirect::Close, error: Process::Redirect::Close)
+  status = {% if flag?(:darwin) %}
+             Process.run("/usr/bin/open", [url], output: Process::Redirect::Close, error: Process::Redirect::Close)
+           {% elsif flag?(:win32) %}
+             Process.run("cmd.exe", ["/c", "start", "", url], output: Process::Redirect::Close, error: Process::Redirect::Close)
+           {% else %}
+             Process.run("xdg-open", [url], output: Process::Redirect::Close, error: Process::Redirect::Close)
+           {% end %}
   Kemal::Log.warn { "Could not open the browser. Visit #{url}" } unless status.success?
 rescue ex
   Kemal::Log.warn { "Could not open the browser. Visit #{url} (#{ex.message})" }
@@ -52,7 +58,7 @@ before_all do |env|
 end
 
 get "/assets/*path" do |env|
-  relative_path = File.join("public", "assets", env.params.url["path"])
+  relative_path = "public/assets/#{env.params.url["path"].lchop('/')}"
   unless MicroSpaceEmpire::EmbeddedFiles.has_key?(relative_path)
     halt env, status_code: 404, response: "Asset not found."
   end

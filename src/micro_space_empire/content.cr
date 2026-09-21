@@ -125,7 +125,7 @@ module MicroSpaceEmpire
     end
 
     private def validate_asset!(root : String, web_path : String) : Nil
-      relative_path = File.join("public", web_path.lchop('/'))
+      relative_path = "public/#{web_path.lchop('/')}"
       path = File.join(root, relative_path)
       return if File.exists?(path) || EmbeddedFiles.has_key?(relative_path)
       raise "Missing card asset: #{path}"
