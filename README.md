@@ -48,22 +48,24 @@ Build on the target operating system or in a matching CI/container runner. Cryst
 
 ### Fedora Linux: native standalone executable
 
-Build directly on Fedora—no Docker or Alpine image is needed. The executable contains the rules manifests, interface assets, and card artwork, so the `dist/` binary is the only application file you need to keep:
+Build directly on Fedora—no Docker or Alpine image is needed. The desktop executable contains the private local server, native GTK/WebKit shell, rules manifests, interface assets, and card artwork, so it is the only application file you need to keep:
 
 ```sh
-sudo dnf install crystal shards gcc sqlite-devel openssl-devel pcre2-devel zlib-devel
+sudo dnf install crystal shards gcc binutils sqlite-devel openssl-devel pcre2-devel zlib-devel gtk4 webkitgtk6.0
 shards install --production
 make test
 make standalone
 ```
 
-The builder names the result for the build machine's architecture, for example `dist/micro-space-empire-fedora-x86_64` or `dist/micro-space-empire-fedora-aarch64`. Run it and open the game in your default browser with:
+The builder names the desktop app for the build machine's architecture, for example `dist/micro-space-empire-fedora-x86_64` or `dist/micro-space-empire-fedora-aarch64`. Launch it directly:
 
 ```sh
-MSE_OPEN_BROWSER=true ./dist/micro-space-empire-fedora-$(uname -m)
+./dist/micro-space-empire-fedora-$(uname -m)
 ```
 
-By default saves are written under `var/` in the current directory. Set `MSE_DATABASE_PATH` to put the database elsewhere. The executable is Fedora-native and dynamically uses Fedora's standard SQLite, OpenSSL, zlib, PCRE2, C, and math runtime libraries; Crystal, Shards, the source tree, and the build toolchain are not needed to run it. Build on the oldest Fedora release you intend to support and build once per architecture.
+The app opens in its own window with no browser chrome. It starts its embedded server on an available loopback port, stops it when the window closes, and stores saves in `${XDG_DATA_HOME:-~/.local/share}/micro-space-empire/`. The build also leaves `dist/micro-space-empire-server-fedora-$(uname -m)` for command-line/headless use; set `MSE_OPEN_BROWSER=true` when running that server if it should open your default browser.
+
+The executables are Fedora-native and dynamically use Fedora's standard GTK, WebKitGTK, SQLite, OpenSSL, zlib, PCRE2, C, and math runtime libraries; Crystal, Shards, the source tree, and the build toolchain are not needed to run them. Build on the oldest Fedora release you intend to support and build once per architecture.
 
 ### Windows: x86-64 executable and DLLs
 
