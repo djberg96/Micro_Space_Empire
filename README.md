@@ -40,6 +40,27 @@ SQLite, OpenSSL, PCRE2, and the Boehm garbage collector are linked into the pack
 
 The generated executable targets the macOS version and architecture of the build Mac. Build on the oldest Mac you intend to support, and build once on each architecture if you need both Apple Silicon and Intel executables.
 
+## Linux Electron AppImage
+
+Build a single-file Electron desktop app on Linux. This needs Node.js 22.12+ and npm alongside the Crystal build dependencies. The build compiles the Crystal server, bundles its non-system runtime libraries, and puts the server and game assets inside an AppImage:
+
+```sh
+# Install Crystal, Shards, a C compiler, and the SQLite/OpenSSL/PCRE2 development libraries first.
+make setup
+cd electron && npm ci && cd ..
+make electron-package
+```
+
+The output is `dist/electron/micro-space-empire-arm64.AppImage` on AArch64 or `dist/electron/micro-space-empire-x64.AppImage` on x86-64. Run the file directly after making it executable (the build already does this):
+
+```sh
+./dist/electron/micro-space-empire-arm64.AppImage
+```
+
+The AppImage uses a static runtime and starts directly without FUSE2. It starts a private server on loopback, opens the game window, and stops the server when the app closes. Saves are stored under `${XDG_DATA_HOME:-~/.local/share}/micro-space-empire/`. Electron and Crystal are not needed on the destination machine. Build on the oldest Linux release you intend to support because the bundled binaries still use the host's C library and graphics stack.
+
+To run the unpackaged Electron shell during development, use `make electron` after `npm ci`. Electron downloads its binary on first launch; to download it ahead of time, run `cd electron && npx install-electron --no`.
+
 ## Fedora standalone executable and Windows server executable
 
 The native window under `src/macos/` is macOS-specific. The Crystal server itself is portable and already embeds the manifests, CSS, JavaScript, and card artwork. Linux and Windows builds therefore need only the resulting executable plus any native libraries described below. They run headlessly by default; set `MSE_OPEN_BROWSER=true` to open the game in the platform's default browser.
