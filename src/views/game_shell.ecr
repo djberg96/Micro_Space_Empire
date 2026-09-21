@@ -93,13 +93,13 @@
     <section class="action-panel panel" data-morph-key="actions">
       <% if !state.active? %>
         <% score = state.score.not_nil! %>
-        <div class="final-score"><strong><%= score.total %></strong><span>Victory Points</span></div>
+        <div class="final-score" title="Your total from controlled systems, researched technologies, and earned bonuses."><strong><%= score.total %></strong><span>Victory Points</span></div>
         <dl class="score-lines">
-          <div><dt>Controlled systems</dt><dd><%= score.systems %></dd></div>
-          <div><dt>Technologies</dt><dd><%= score.technologies %></dd></div>
-          <div><dt>Exploration bonus</dt><dd><%= score.exploration_bonus %></dd></div>
-          <div><dt>Scientific bonus</dt><dd><%= score.scientific_bonus %></dd></div>
-          <div><dt>Warlord bonus</dt><dd><%= score.warlord_bonus %></dd></div>
+          <div title="Victory points printed on your controlled system cards."><dt>Controlled systems</dt><dd><%= score.systems %></dd></div>
+          <div title="One victory point for each technology you researched."><dt>Technologies</dt><dd><%= score.technologies %></dd></div>
+          <div title="One bonus point if you explored every selected near and distant system."><dt>Exploration bonus</dt><dd><%= score.exploration_bonus %></dd></div>
+          <div title="One bonus point if you researched all eight technologies."><dt>Scientific bonus</dt><dd><%= score.scientific_bonus %></dd></div>
+          <div title="Three bonus points if you control every selected system."><dt>Warlord bonus</dt><dd><%= score.warlord_bonus %></dd></div>
         </dl>
       <% elsif state.phase == "phase_one" && state.subphase == "choose" %>
         <h2>Choose your approach</h2>

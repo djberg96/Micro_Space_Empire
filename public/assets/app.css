@@ -208,8 +208,8 @@ details summary { cursor: pointer; font-weight: 800; display: flex; justify-cont
 .research-grid { margin: 1rem 0; }
 .research-grid button { justify-content: space-between; text-align: left; min-height: 3.3rem; }
 .warning { border-left: 3px solid var(--gold); padding: .5rem .8rem; background: rgba(233,184,95,.08); }
-.final-score { display: grid; justify-items: center; margin: 1.2rem; }.final-score strong { font: 700 5rem Georgia, serif; color: var(--gold); }.final-score span { color: var(--muted); }
-.score-lines div { display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding: .45rem 0; }.score-lines dd { font-weight: 800; }
+.final-score { display: grid; justify-items: center; margin: 1.2rem; cursor: help; user-select: none; }.final-score strong { font: 700 5rem Georgia, serif; color: var(--gold); }.final-score span { color: var(--muted); }
+.score-lines { user-select: none; }.score-lines div { display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding: .45rem 0; cursor: help; }.score-lines dd { font-weight: 800; }
 .reveal-strip { display: grid; justify-items: center; padding: 2.5rem 0 1rem; perspective: 1000px; }
 .card { display: block; width: 100%; border-radius: 4.5% / 3.5%; box-shadow: 0 12px 28px #0009; }
 .current-card { width: min(280px, 65vw); animation: card-reveal .55s ease both; }
