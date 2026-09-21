@@ -1,6 +1,7 @@
 (() => {
   const themes = new Set(["starfield", "nebula", "tactical", "command"]);
   let panelResizeTimer;
+  let transitionTimer;
 
   const applyTheme = (theme) => {
     const selected = themes.has(theme) ? theme : "starfield";
@@ -188,6 +189,95 @@
     });
   };
 
+  const morphKey = (node) => {
+    if (node.nodeType !== Node.ELEMENT_NODE) return null;
+    return node.getAttribute("data-morph-key") || (node.id ? `id:${node.id}` : null);
+  };
+
+  const compatibleNodes = (current, incoming) => {
+    if (current.nodeType !== incoming.nodeType) return false;
+    if (current.nodeType !== Node.ELEMENT_NODE) return true;
+    const currentKey = morphKey(current);
+    const incomingKey = morphKey(incoming);
+    if (currentKey || incomingKey) return currentKey === incomingKey;
+    return current.tagName === incoming.tagName;
+  };
+
+  const syncAttributes = (current, incoming) => {
+    const runtimeAttributes = new Set(["data-bound", "data-confirm-bound"]);
+    Array.from(current.attributes).forEach(({name}) => {
+      if (!incoming.hasAttribute(name) && !runtimeAttributes.has(name)) current.removeAttribute(name);
+    });
+    Array.from(incoming.attributes).forEach(({name, value}) => {
+      if (current.getAttribute(name) !== value) current.setAttribute(name, value);
+    });
+  };
+
+  const morphNode = (current, incoming) => {
+    if (!compatibleNodes(current, incoming)) {
+      current.replaceWith(incoming);
+      return incoming;
+    }
+
+    if (current.nodeType === Node.TEXT_NODE || current.nodeType === Node.COMMENT_NODE) {
+      if (current.nodeValue !== incoming.nodeValue) current.nodeValue = incoming.nodeValue;
+      return current;
+    }
+
+    syncAttributes(current, incoming);
+    morphChildren(current, incoming);
+
+    if (current instanceof HTMLInputElement) {
+      if (current.type === "checkbox" || current.type === "radio") current.checked = incoming.checked;
+      else if (current.value !== incoming.value) current.value = incoming.value;
+    } else if (current instanceof HTMLSelectElement && current.value !== incoming.value) {
+      current.value = incoming.value;
+    }
+    return current;
+  };
+
+  const morphChildren = (current, incoming) => {
+    const incomingChildren = Array.from(incoming.childNodes);
+    let cursor = current.firstChild;
+
+    incomingChildren.forEach((incomingChild) => {
+      const key = morphKey(incomingChild);
+      let match = null;
+
+      if (key) {
+        match = Array.from(current.childNodes).find((candidate) => morphKey(candidate) === key) || null;
+      } else if (cursor && !morphKey(cursor) && compatibleNodes(cursor, incomingChild)) {
+        match = cursor;
+      }
+
+      if (!match) {
+        current.insertBefore(incomingChild, cursor);
+        cursor = incomingChild.nextSibling;
+        return;
+      }
+
+      if (match !== cursor) current.insertBefore(match, cursor);
+      const morphed = morphNode(match, incomingChild);
+      cursor = morphed.nextSibling;
+    });
+
+    while (cursor) {
+      const next = cursor.nextSibling;
+      cursor.remove();
+      cursor = next;
+    }
+  };
+
+  const updateGameShell = (html) => {
+    const template = document.createElement("template");
+    template.innerHTML = html.trim();
+    const incoming = template.content.querySelector("#game-shell");
+    const current = document.querySelector("#game-shell");
+    if (!current || !incoming) return false;
+    morphNode(current, incoming);
+    return true;
+  };
+
   const bindActions = () => {
     bindThemePickers();
     animateDice();
@@ -211,18 +301,16 @@
             credentials: "same-origin"
           });
           const payload = await response.json();
-          if (payload.html) {
-            const current = document.querySelector("#game-shell");
-            current.outerHTML = payload.html;
+          if (payload.html && updateGameShell(payload.html)) {
             bindActions();
-            const next = document.querySelector("#game-shell");
-            next.classList.add("state-enter");
-            const transition = next.querySelector(".transition-message");
+            const transition = document.querySelector("#game-shell .transition-message");
             if (transition) {
+              window.clearTimeout(transitionTimer);
               transition.classList.add("is-new");
-              window.setTimeout(() => transition.classList.remove("is-new"), 1100);
+              transitionTimer = window.setTimeout(() => transition.classList.remove("is-new"), 1100);
             }
-            window.setTimeout(() => next.classList.remove("state-enter"), 500);
+          } else if (payload.html) {
+            window.location.reload();
           }
         } catch (_error) {
           window.location.reload();

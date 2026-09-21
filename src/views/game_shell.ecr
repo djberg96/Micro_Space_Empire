@@ -1,5 +1,5 @@
 <main id="game-shell" class="game-shell <%= state.current_event || state.current_system ? "has-reveal" : "" %>" data-transition="<%= h(state.last_transition) %>">
-  <nav class="game-nav">
+  <nav class="game-nav" data-morph-key="navigation">
     <% if record.saved %><a href="/" class="brand">MSE</a><% else %><span class="brand">MSE</span><% end %>
     <div><strong><%= record.saved ? h(record.name) : "Unsaved game" %></strong><span><%= state.expansion ? "Expansion" : "Core" %> rules<%= record.saved ? " · autosaved" : "" %></span></div>
     <div class="nav-actions">
@@ -49,21 +49,21 @@
 
   <% if error %><div class="notice error" role="alert"><%= h(error) %></div><% end %>
 
-  <header class="turn-header">
+  <header class="turn-header" data-morph-key="turn-header">
     <div><p class="eyebrow">Year <%= state.year %> · Turn <%= state.turn %></p><h1><%= h(phase_title(state)) %></h1></div>
     <p><%= h(phase_help(state)) %></p>
   </header>
-  <div class="transition-message <%= state.last_roll ? "roll-transition" : "" %>" role="status">
+  <div class="transition-message <%= state.last_roll ? "roll-transition" : "" %>" role="status" data-morph-key="transition">
     <% if roll = state.last_roll %>
       <span class="animated-die" data-die-result="<%= roll %>" role="img" aria-label="Rolled <%= roll %>"><span aria-hidden="true">&#<%= 9855 + roll %>;</span></span>
     <% end %>
     <span class="transition-copy"><%= h(state.last_transition) %></span>
   </div>
 
-  <section class="command-grid">
+  <section class="command-grid" data-morph-key="commands">
     <div class="panel-resizer dashboard-resizer" data-panel-resizer="dashboard" role="separator" aria-orientation="vertical" aria-label="Resize dashboard panel" aria-valuemin="220" aria-valuemax="520" aria-valuenow="270" tabindex="0" title="Drag to resize · Double-click to reset"></div>
     <div class="panel-resizer action-resizer" data-panel-resizer="action" role="separator" aria-orientation="vertical" aria-label="Resize decision panel" aria-valuemin="280" aria-valuemax="600" aria-valuenow="350" tabindex="0" title="Drag to resize · Double-click to reset"></div>
-    <aside class="dashboard panel">
+    <aside class="dashboard panel" data-morph-key="dashboard">
       <% metal_prod, wealth_prod = @engine.production(state) %>
       <div class="resource-grid">
         <div class="resource metal"><span>Metal</span><strong><%= state.metal %><small>/ <%= @engine.storage_cap(state) %></small></strong><em>+<%= metal_prod %> production</em></div>
@@ -90,7 +90,7 @@
       </details>
     </aside>
 
-    <section class="action-panel panel">
+    <section class="action-panel panel" data-morph-key="actions">
       <% if !state.active? %>
         <% score = state.score.not_nil! %>
         <div class="final-score"><strong><%= score.total %></strong><span>Victory Points</span></div>
@@ -195,12 +195,12 @@
   </section>
 
   <% if current = state.current_event %>
-    <section class="reveal-strip"><p class="eyebrow">Current event</p><img class="card current-card" src="<%= event_card(current).front_path %>" alt="<%= h(event_card(current).name) %>"></section>
+    <section class="reveal-strip" data-morph-key="reveal"><p class="eyebrow">Current event</p><img class="card current-card" src="<%= event_card(current).front_path %>" alt="<%= h(event_card(current).name) %>"></section>
   <% elsif current = state.current_system %>
-    <section class="reveal-strip"><p class="eyebrow">Discovered system</p><img class="card current-card" src="<%= system_card(current).front_path %>" alt="<%= h(system_card(current).name) %>"></section>
+    <section class="reveal-strip" data-morph-key="reveal"><p class="eyebrow">Discovered system</p><img class="card current-card" src="<%= system_card(current).front_path %>" alt="<%= h(system_card(current).name) %>"></section>
   <% end %>
 
-  <section class="empire-section">
+  <section class="empire-section" data-morph-key="empire">
     <div class="section-heading">
       <div><p class="eyebrow">Star chart</p><h2>Your empire</h2></div>
       <div class="empire-heading-actions">
@@ -215,7 +215,7 @@
     <div class="card-grid">
       <% state.systems.reject { |system| system.status == "discarded" || system.status == "pending" }.each do |system| %>
         <% card = system_card(system.id) %>
-        <figure class="system-card <%= h(system.status) %>">
+        <figure class="system-card <%= h(system.status) %>" data-morph-key="system-<%= h(system.id) %>">
           <div class="card-frame"><img class="card" src="<%= card.front_path %>" alt="<%= h(card.name) %>"></div>
           <figcaption><span><%= h(card.name) %></span><em><%= h(system.status) %><% if system.production_disabled_collections > 0 %> · storms ×<%= system.production_disabled_collections %><% end %></em></figcaption>
         </figure>
