@@ -1,4 +1,5 @@
 /bin/
+/dist/
 /lib/
 /.shards/
 /var/*.db

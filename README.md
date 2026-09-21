@@ -23,6 +23,23 @@ make build
 ./bin/micro_space_empire
 ```
 
+## Standalone macOS app
+
+Build a self-contained desktop app containing the local server, rules manifests, interface assets, and all card artwork:
+
+```sh
+make standalone
+open "dist/Micro Space Empire.app"
+```
+
+The app presents the game in a native macOS window with no browser chrome. Its private server starts and stops with the app, chooses an available local port automatically, and cannot accept remote connections. Saves live in `~/Library/Application Support/Micro Space Empire/`.
+
+The standalone builder also produces `dist/micro-space-empire-server` for headless or automated use. Set `MSE_OPEN_BROWSER=true` if that server should open the default browser.
+
+SQLite, OpenSSL, PCRE2, and the Boehm garbage collector are linked into the packaged server. The finished app therefore needs neither Crystal nor Homebrew on the destination Mac; only standard macOS frameworks and system libraries remain dynamic.
+
+The generated executable targets the macOS version and architecture of the build Mac. Build on the oldest Mac you intend to support, and build once on each architecture if you need both Apple Silicon and Intel executables.
+
 ## Content and artwork
 
 Rules and source PDFs remain in `Documents/` and `Images/`. Versioned card and technology data lives in `data/`. Each card has an independently replaceable `front.webp` and `back.webp` under `public/assets/cards/`; rerun `make assets` to regenerate them from the supplied PDFs.

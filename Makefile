@@ -1,4 +1,4 @@
-.PHONY: setup assets dev test build clean
+.PHONY: setup assets dev test build standalone clean
 
 setup:
 	shards install
@@ -17,5 +17,9 @@ build:
 	mkdir -p bin
 	crystal build --release src/micro_space_empire.cr -o bin/micro_space_empire
 
+standalone:
+	sh scripts/build_standalone.sh
+
 clean:
-	rm -f bin/micro_space_empire
+	rm -f bin/micro_space_empire dist/micro-space-empire-server
+	rm -rf "dist/Micro Space Empire.app"

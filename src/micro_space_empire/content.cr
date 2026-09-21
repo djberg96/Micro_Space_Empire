@@ -1,4 +1,5 @@
 require "json"
+require "./embedded_files"
 
 module MicroSpaceEmpire
   class SystemCard
@@ -81,9 +82,9 @@ module MicroSpaceEmpire
     getter technologies : Hash(String, Technology)
 
     def self.load(root : String = ENV.fetch("MSE_ROOT", Dir.current)) : Content
-      system_manifest = SystemManifest.from_json(File.read(File.join(root, "data", "systems.json")))
-      event_manifest = EventManifest.from_json(File.read(File.join(root, "data", "events.json")))
-      tech_manifest = TechnologyManifest.from_json(File.read(File.join(root, "data", "technologies.json")))
+      system_manifest = SystemManifest.from_json(read_content(root, "data/systems.json"))
+      event_manifest = EventManifest.from_json(read_content(root, "data/events.json"))
+      tech_manifest = TechnologyManifest.from_json(read_content(root, "data/technologies.json"))
       version = system_manifest.version
       unless event_manifest.version == version && tech_manifest.version == version
         raise "Content manifest versions do not match"
@@ -108,16 +109,26 @@ module MicroSpaceEmpire
 
       systems.each_value do |card|
         {card.front_path, card.back_path}.each do |web_path|
-          path = File.join(root, "public", web_path.lchop('/'))
-          raise "Missing card asset: #{path}" unless File.exists?(path)
+          validate_asset!(root, web_path)
         end
       end
       events.each_value do |card|
         {card.front_path, card.back_path}.each do |web_path|
-          path = File.join(root, "public", web_path.lchop('/'))
-          raise "Missing card asset: #{path}" unless File.exists?(path)
+          validate_asset!(root, web_path)
         end
       end
+    end
+
+    private def self.read_content(root : String, relative_path : String) : String
+      path = File.join(root, relative_path)
+      File.exists?(path) ? File.read(path) : EmbeddedFiles.fetch(relative_path)
+    end
+
+    private def validate_asset!(root : String, web_path : String) : Nil
+      relative_path = File.join("public", web_path.lchop('/'))
+      path = File.join(root, relative_path)
+      return if File.exists?(path) || EmbeddedFiles.has_key?(relative_path)
+      raise "Missing card asset: #{path}"
     end
   end
 end

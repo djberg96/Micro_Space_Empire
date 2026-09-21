@@ -14,9 +14,29 @@ ENGINE = MicroSpaceEmpire::GameEngine.new(CONTENT)
 STORE = MicroSpaceEmpire::Store.open(ROOT)
 RENDERER = MicroSpaceEmpire::Renderer.new(CONTENT, ENGINE)
 
+private def open_browser? : Bool
+  value = ENV["MSE_OPEN_BROWSER"]?
+  return false unless value
+  !{"0", "false", "no", "off"}.includes?(value.downcase)
+end
+
+private def game_url(config : Kemal::Config) : String
+  host = config.host_binding
+  host = "127.0.0.1" if {"0.0.0.0", "::"}.includes?(host)
+  host = "[#{host}]" if host.includes?(':') && !host.starts_with?('[')
+  "#{config.scheme}://#{host}:#{config.port}/"
+end
+
+private def open_game_in_browser(url : String) : Nil
+  status = Process.run("/usr/bin/open", [url], output: Process::Redirect::Close, error: Process::Redirect::Close)
+  Kemal::Log.warn { "Could not open the browser. Visit #{url}" } unless status.success?
+rescue ex
+  Kemal::Log.warn { "Could not open the browser. Visit #{url} (#{ex.message})" }
+end
+
 Kemal.config.host_binding = ENV.fetch("MSE_HOST", "127.0.0.1")
 Kemal.config.port = ENV.fetch("MSE_PORT", "3000").to_i
-Kemal.config.public_folder = File.join(ROOT, "public")
+serve_static false
 
 before_all do |env|
   method = env.request.method
@@ -29,6 +49,23 @@ before_all do |env|
       end
     end
   end
+end
+
+get "/assets/*path" do |env|
+  relative_path = File.join("public", "assets", env.params.url["path"])
+  unless MicroSpaceEmpire::EmbeddedFiles.has_key?(relative_path)
+    halt env, status_code: 404, response: "Asset not found."
+  end
+
+  env.response.content_type = case File.extname(relative_path)
+                              when ".css"  then "text/css; charset=utf-8"
+                              when ".js"   then "text/javascript; charset=utf-8"
+                              when ".webp" then "image/webp"
+                              else              "application/octet-stream"
+                              end
+  env.response.headers["Cache-Control"] = "no-cache"
+  disk_path = File.join(ROOT, relative_path)
+  File.exists?(disk_path) ? File.read(disk_path) : MicroSpaceEmpire::EmbeddedFiles.fetch(relative_path)
 end
 
 get "/" do |env|
@@ -158,4 +195,12 @@ error 404 do |env|
 end
 
 at_exit { STORE.close }
-Kemal.run
+Kemal.run do |config|
+  if open_browser?
+    url = game_url(config)
+    spawn do
+      sleep 250.milliseconds
+      open_game_in_browser(url)
+    end
+  end
+end

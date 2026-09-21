@@ -16,4 +16,11 @@ describe MicroSpaceEmpire::Content do
     asteroid.value(1).should eq(1)
     asteroid.value(2).should eq(1)
   end
+
+  it "loads its embedded content and artwork without the project directories" do
+    embedded = MicroSpaceEmpire::Content.load(Dir.tempdir)
+    embedded.validate!(Dir.tempdir)
+    embedded.systems.size.should eq(13)
+    embedded.events.size.should eq(11)
+  end
 end
